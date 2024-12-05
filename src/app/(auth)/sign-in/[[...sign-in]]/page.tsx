@@ -1,7 +1,7 @@
 import { SignIn } from "@clerk/nextjs";
 import Image from "next/image";
 
-export default function Page() {
+const Page =()=> {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2">
       <div>
@@ -19,3 +19,4 @@ export default function Page() {
     </div>
   );
 }
+export default Page

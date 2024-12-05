@@ -20,7 +20,7 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <head>
-        <link rel="icon" href="/logo.svg" />
+          <link rel="icon" href="/logo.svg" />
         </head>
         <body className={MyAppFont.className}>
           <Provider>{children}</Provider>

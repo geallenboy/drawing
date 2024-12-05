@@ -1,7 +1,6 @@
 "use client";
 import * as React from "react";
 import { NextUIProvider } from "@nextui-org/react";
-import Header from "@/components/Header";
 import { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import { db } from "@/config/db";
@@ -9,6 +8,7 @@ import { eq } from "drizzle-orm";
 import { Users } from "@/config/schema";
 import { UserDetailContext } from "@/_context/UserDetailConext";
 import { PayPalScriptProvider } from "@paypal/react-paypal-js";
+import Header from "./_components/Header";
 
 const provider = ({ children }: { children: React.ReactNode }) => {
   const [userDetail, setUserDetail] = useState<any>();

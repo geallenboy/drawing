@@ -27,7 +27,7 @@ const formSchema = z.object({
   }),
 });
 
-const LoginForm = ({ className }: { className: string }) => {
+export const LoginForm = ({ className }: { className: string }) => {
   const [loading, setLoading] = useState(false);
   const toastId = useId();
   const form = useForm<z.infer<typeof formSchema>>({

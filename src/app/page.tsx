@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import Hero from "./_components/Hero";
+import Hero from "@/components/Hero";
 import { BookmarkIcon } from "lucide-react";
 
 export default function Home() {

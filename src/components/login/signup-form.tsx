@@ -2,7 +2,6 @@ import React, { useId, useState } from "react";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -51,7 +50,7 @@ const formSchema = z
     path: ["confirmPassword"],
   });
 
-const SignUpForm = ({ className }: { className: string }) => {
+export const SignUpForm = ({ className }: { className: string }) => {
   const [loading, setLoading] = useState(false);
   const toastId = useId();
   const form = useForm<z.infer<typeof formSchema>>({

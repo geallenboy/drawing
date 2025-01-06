@@ -2,7 +2,7 @@ import React from "react";
 import AuthImg from "@/public/login-banner.jpeg";
 import Image from "next/image";
 import Logo from "@/components/logo";
-import AuthForm from "@/components/login/AuthForm";
+import AuthForm from "@/components/login/auth-form";
 
 const LoginPage = () => {
   return (

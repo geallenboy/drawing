@@ -1,13 +1,12 @@
 "use client";
 import React, { useState } from "react";
-
-import LoginForm from "./LoginForm";
+import LoginForm from "./login-form";
 import { Button } from "../ui/button";
-import SignUpForm from "./SignupForm";
+import SignUpForm from "./signup-form";
 import Link from "next/link";
-import ResetPassword from "./ResetPassword";
+import ResetPassword from "./reset-password";
 
-const AuthForm = () => {
+export const AuthForm = () => {
   const [mode, setMode] = useState("login");
   return (
     <div className="space-y-6">

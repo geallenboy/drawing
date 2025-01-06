@@ -2,7 +2,6 @@ import React from "react";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -21,7 +20,7 @@ const formSchema = z.object({
   }),
 });
 
-const ResetPassword = ({ className }: { className: string }) => {
+export const ResetPassword = ({ className }: { className: string }) => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {

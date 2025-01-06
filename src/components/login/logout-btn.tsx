@@ -3,7 +3,7 @@
 import { logout } from "@/app/actions/auth-actions";
 import React from "react";
 
-const LogoutBtn = () => {
+export const LogoutBtn = () => {
   const handleLogout = async () => {
     await logout();
   };
@@ -12,7 +12,7 @@ const LogoutBtn = () => {
       onClick={handleLogout}
       className="inline-block w-full cursor-pointer text-destructive"
     >
-      LogoutBtn
+      logout
     </span>
   );
 };

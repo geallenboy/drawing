@@ -6,6 +6,12 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+@media (min-width: 1536px) {
+  .container {
+    max-width: 1400px;
+  }
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;

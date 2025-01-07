@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { signup } from "@/app/actions/auth-actions";
+import { signupAction } from "@/app/actions/auth-actions";
 import { redirect } from "next/navigation";
 
 const passwordValidationRegex = new RegExp(
@@ -70,7 +70,7 @@ export const SignUpForm = ({ className }: { className: string }) => {
     formData.append("email", values.email);
     formData.append("password", values.password);
 
-    const { success, error } = await signup(formData);
+    const { success, error } = await signupAction(formData);
     if (!success) {
       toast.error(String(error), { id: toastId });
     } else {

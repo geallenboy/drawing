@@ -9,7 +9,7 @@ interface AuthResponse {
     data: unknown | null;
 }
 
-export const signup = async (formData: FormData): Promise<AuthResponse> => {
+export const signupAction = async (formData: FormData): Promise<AuthResponse> => {
     const supbase = await createClient();
     const data = {
         email: formData.get("email") as string,
@@ -31,7 +31,7 @@ export const signup = async (formData: FormData): Promise<AuthResponse> => {
 
 }
 
-export const login = async (formData: FormData): Promise<AuthResponse> => {
+export const loginAction = async (formData: FormData): Promise<AuthResponse> => {
     const supbase = await createClient();
     const data = {
         email: formData.get("email") as string,
@@ -48,7 +48,7 @@ export const login = async (formData: FormData): Promise<AuthResponse> => {
 
 }
 
-export const logout = async (): Promise<void> => {
+export const logoutAction = async (): Promise<void> => {
     const supbase = await createClient();
     await supbase.auth.signOut()
     redirect("/login")

@@ -1,4 +1,5 @@
-import React from "react";
+"use client";
+import React, { useEffect } from "react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -29,6 +30,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Info } from "lucide-react";
 
+import useGeneratedStore from "@/store/useGeneratedStore.ts";
+
 /**
  * prompt: "black forest gateau cake spelling out the words \"FLUX DEV\", tasty, food photography, dynamic shot",
   go_fast: true,
@@ -41,7 +44,7 @@ import { Info } from "lucide-react";
   prompt_strength: 0.8,
   num_inference_steps: 28
  */
-const formSchema = z.object({
+export const ImageGenerationFormSchema = z.object({
   model: z.string({
     required_error: "Model is required!",
   }),
@@ -51,7 +54,7 @@ const formSchema = z.object({
   guidance: z
     .number()
     .min(1, { message: "guidance of outputs should be atleast 1." })
-    .max(10, { message: "guidance of outputs must be les then 4." }),
+    .max(10, { message: "guidance of outputs must be les then 10." }),
   num_outputs: z
     .number()
     .min(1, { message: "Number of outputs should be atleast 1." })
@@ -70,12 +73,14 @@ const formSchema = z.object({
     .number()
     .min(1, { message: "Number of inference steps should be atleast 1." })
     .max(50, {
-      message: "Number of inference steps must be les then or equal to 100.",
+      message: "Number of inference steps must be les then or equal to 50.",
     }),
 });
 const Configurations = () => {
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const generateImageStore = useGeneratedStore((state) => state.generateImage);
+
+  const form = useForm<z.infer<typeof ImageGenerationFormSchema>>({
+    resolver: zodResolver(ImageGenerationFormSchema),
     defaultValues: {
       model: "black-forest-labs/flux-dev",
       prompt: "",
@@ -87,11 +92,28 @@ const Configurations = () => {
       num_inference_steps: 28,
     },
   });
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
-    // Do something with the form values.
-    // ✅ This will be type-safe and validated.
+  const onSubmit = async (
+    values: z.infer<typeof ImageGenerationFormSchema>
+  ) => {
     console.log(values);
+    await generateImageStore(values);
   };
+  useEffect(() => {
+    const subscription = form.watch((value, { name }) => {
+      if (name === "model") {
+        let newSteps;
+        if (value.model === "black-forest-labs/flux-schnell") {
+          newSteps = 4;
+        } else {
+          newSteps = 28;
+        }
+        if (newSteps !== undefined) {
+          form.setValue("num_inference_steps", newSteps);
+        }
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [form]);
   return (
     <TooltipProvider>
       <Form {...form}>
@@ -272,9 +294,14 @@ const Configurations = () => {
                     <Slider
                       defaultValue={[field.value]}
                       min={1}
-                      max={50}
+                      max={
+                        form.getValues("model") ===
+                        "black-forest-labs/flux-schnell"
+                          ? 4
+                          : 50
+                      }
                       step={1}
-                      onChange={(value) => field.onChange(value)}
+                      onValueChange={(value) => field.onChange(value[0])}
                     />
                   </FormControl>
                   <FormMessage />

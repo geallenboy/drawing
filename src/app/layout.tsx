@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Provider from "./provider";
 import { Toaster } from "@/components/ui/sonner";
 import { Nunito } from "next/font/google";
 import "./globals.css";
@@ -22,7 +21,7 @@ export default function RootLayout({
         <link rel="icon" href="/logo.svg" />
       </head>
       <body className={`${MyAppFont.className} font-sans`}>
-        <Provider>{children}</Provider>
+        {children}
         <Toaster richColors />
       </body>
     </html>

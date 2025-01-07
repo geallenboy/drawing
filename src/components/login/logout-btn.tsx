@@ -1,11 +1,11 @@
 "use client";
 
-import { logout } from "@/app/actions/auth-actions";
+import { logoutAction } from "@/app/actions/auth-actions";
 import React from "react";
 
 export const LogoutBtn = () => {
   const handleLogout = async () => {
-    await logout();
+    await logoutAction();
   };
   return (
     <span

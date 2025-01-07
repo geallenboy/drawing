@@ -2,11 +2,11 @@
 import { ImageGenerationFormSchema } from "@/components/image-generation/config-urations";
 import { z } from "zod"
 import Replicate from "replicate";
-import { createClient } from "@/utils/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { Database } from "@datatypes.types";
 import { imageMeta } from "image-meta"
 import { randomUUID } from "crypto"
-import { error } from "console";
+
 
 const replicate = new Replicate({
     auth: process.env.REPLICATE_API_TOKEN,
@@ -124,4 +124,71 @@ export const storeImagesAction = async (data: storeImageinput[]) => {
             results: uploadResults
         }
     }
-} 
+}
+
+export const getImagesAction = async (limit: number) => {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+        return {
+            error: "Unauthorized",
+            success: false,
+            data: null
+        }
+    }
+    let query = supabase.from("generated_images").select("*").eq("user_id", user.id).order("created_at", { ascending: false })
+    if (limit) {
+        query = query.limit(limit)
+    }
+    const { data, error } = await query;
+    if (error) {
+        return {
+            error: error.message || "Failed to fetch images!",
+            success: false,
+            data: null
+        }
+    }
+    const imageWithUrl = await Promise.all(
+        data.map(async (image: Database["public"]["Tables"]["generated_images"]["Insert"]) => {
+            const { data: selData } = await supabase.storage.from("generated_images").createSignedUrl(`${user.id}/${image.image_name}`, 3600)
+            return {
+                ...image,
+                url: selData?.signedUrl
+            }
+        })
+
+    )
+    console.log("imageWithUrl:", imageWithUrl)
+    return {
+        error: null,
+        success: true,
+        data: imageWithUrl || null
+    }
+}
+
+export const deleteImageAction = async (id: string, imageName: string) => {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        return {
+            error: "Unauthorized",
+            success: false,
+            data: null
+        }
+    }
+    const { data, error } = await supabase.from("generated_images").delete().eq("id", id);
+    console.log(data)
+    if (error) {
+        return {
+            error: error.message,
+            success: false, data: null
+        }
+    }
+    await supabase.storage.from('generated_images').remove([`${user?.id}/${imageName}`])
+    return {
+        error: null,
+        success: true,
+        data: data
+    }
+}

@@ -80,6 +80,9 @@ const ModelTraningForm = () => {
       formData.append("fileKey", res.Key);
       formData.append("modelName", values.modelName);
       formData.append("gender", values.gender);
+
+      toast.success("Initiating model training...!", { id: toastId });
+
       //use the /tranin handler
       const response = await fetch("/api/train", {
         method: "POST",

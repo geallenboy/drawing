@@ -31,6 +31,7 @@ import { Input } from "@/components/ui/input";
 import { Info } from "lucide-react";
 
 import useGeneratedStore from "@/store/useGeneratedStore.ts";
+import { Tables } from "@datatypes.types";
 
 /**
  * prompt: "black forest gateau cake spelling out the words \"FLUX DEV\", tasty, food photography, dynamic shot",
@@ -76,13 +77,19 @@ export const ImageGenerationFormSchema = z.object({
       message: "Number of inference steps must be les then or equal to 50.",
     }),
 });
-const Configurations = () => {
+
+interface ConfiguratinsPros {
+  userModels: Tables<"models">[];
+  model_id?: string;
+}
+
+const Configurations = ({ userModels, model_id }: ConfiguratinsPros) => {
   const generateImageStore = useGeneratedStore((state) => state.generateImage);
 
   const form = useForm<z.infer<typeof ImageGenerationFormSchema>>({
     resolver: zodResolver(ImageGenerationFormSchema),
     defaultValues: {
-      model: "black-forest-labs/flux-dev",
+      model: model_id ? `geallenboy/${model_id}` : "black-forest-labs/flux-dev",
       prompt: "",
       guidance: 3.5,
       num_outputs: 1,
@@ -96,7 +103,25 @@ const Configurations = () => {
     values: z.infer<typeof ImageGenerationFormSchema>
   ) => {
     console.log(values);
-    await generateImageStore(values);
+    const newValues = {
+      ...values,
+      prompt: values.model.startsWith("geallenboy")
+        ? (() => {
+            const modelId = values.model
+              .replace("geallenboy/", "")
+              .split(":")[0];
+            console.log("modelId:", modelId);
+            const selectedModel = userModels.find(
+              (model) => model.model_id === modelId
+            );
+            console.log("selectedModel:", selectedModel);
+            return `photo of a ${selectedModel?.trigger_word || "GJL"} ${
+              selectedModel?.gender
+            }, ${values.prompt}`;
+          })()
+        : values.prompt,
+    };
+    await generateImageStore(newValues);
   };
   useEffect(() => {
     const subscription = form.watch((value, { name }) => {
@@ -152,6 +177,17 @@ const Configurations = () => {
                       <SelectItem value="black-forest-labs/flux-schnell">
                         Flux Schnell
                       </SelectItem>
+                      {userModels?.map(
+                        (model) =>
+                          model.training_status === "succeeded" && (
+                            <SelectItem
+                              key={model.model_id}
+                              value={`geallenboy/${model.model_id}:${model.version}`}
+                            >
+                              {model.model_name}
+                            </SelectItem>
+                          )
+                      )}
                     </SelectContent>
                   </Select>
 

@@ -20,18 +20,40 @@ interface ImageResponse {
 }
 
 export const generateImageAction = async (input: (z.infer<typeof ImageGenerationFormSchema>)): Promise<ImageResponse> => {
-    const userInput = {
-        prompt: input.prompt,
-        go_fast: true,
-        guidance: input.guidance,
-        megapixels: "1",
-        num_outputs: input.num_outputs,
-        aspect_ratio: input.aspect_ratio,
-        output_format: input.output_format,
-        output_quality: input.output_quality,
-        prompt_strength: 0.8,
-        num_inference_steps: input.num_inference_steps
-    };
+
+    if (!process.env.REPLICATE_API_TOKEN) {
+        return {
+            error: "The replicate api token is not set!",
+            success: false,
+            data: null
+        }
+    }
+    const userInput = input.model.startsWith("geallenboy/") ?
+        {
+            model: "dev",
+            prompt: input.prompt,
+            lara_scale: 1,
+            extra_lora_scale: 0,
+            guidance: input.guidance,
+            num_outputs: input.num_outputs,
+            aspect_ratio: input.aspect_ratio,
+            output_format: input.output_format,
+            output_quality: input.output_quality,
+            prompt_strength: 0.8,
+            num_inference_steps: input.num_inference_steps
+        } :
+        {
+            prompt: input.prompt,
+            go_fast: true,
+            guidance: input.guidance,
+            megapixels: "1",
+            num_outputs: input.num_outputs,
+            aspect_ratio: input.aspect_ratio,
+            output_format: input.output_format,
+            output_quality: input.output_quality,
+            prompt_strength: 0.8,
+            num_inference_steps: input.num_inference_steps
+        };
 
     try {
         const output = await replicate.run(input.model as `${string}/${string}`, { input: userInput });

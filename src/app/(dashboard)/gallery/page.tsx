@@ -12,7 +12,7 @@ const GallerryPage = async () => {
         Here you can see all the images you have generated .Click on an image to
         view details
       </p>
-      <GalleryComponent images={images} />
+      <GalleryComponent images={images as any} />
     </section>
   );
 };

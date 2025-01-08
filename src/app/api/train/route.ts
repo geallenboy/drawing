@@ -1,6 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { error } from "console";
 import { NextRequest, NextResponse } from "next/server";
 import Replicate from "replicate";
 
@@ -8,7 +7,7 @@ const replicate = new Replicate({
     auth: process.env.REPLICATE_API_TOKEN
 })
 
-const webhook_url = process.env.SITE_URL || 'https://da58-183-209-148-237.ngrok-free.app'
+const webhook_url = process.env.SITE_URL || 'https://ec97-183-209-148-237.ngrok-free.app'
 
 export async function POST(request: NextRequest) {
     try {
@@ -75,7 +74,7 @@ export async function POST(request: NextRequest) {
                     // cache_latents_to_disk: false,
                     // wandb_sample_interval: 100
                 },
-                webhook: `${webhook_url}/api/webhook/training`,
+                webhook: `${webhook_url}/api/webhooks/training?userId=${user.id}&modelName=${encodeURIComponent(input.modelName)}&fileName=${encodeURIComponent(fileName)}`,
                 webhook_events_filter: ["completed"]
             }
         );

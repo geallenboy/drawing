@@ -78,7 +78,9 @@ const ImageDialog = ({ image, onClose }: ImageDialogProps) => {
                 className="rounded-full border border-primary/30 px-4 py-2 text-sm font-normal"
               >
                 <span>Model ID:</span>
-                {image.model}
+                {image.model?.startsWith("geallenboy/")
+                  ? image.model.split("/")[1].split(":")[0]
+                  : image.model}
               </Badge>
               <Badge
                 variant={"secondary"}

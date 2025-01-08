@@ -58,6 +58,3 @@ const GalleryComponent = ({ images }: GalleyProps) => {
 };
 
 export default GalleryComponent;
-function usesState<T>(arg0: null): [any, any] {
-  throw new Error("Function not implemented.");
-}

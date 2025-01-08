@@ -163,11 +163,11 @@ export const getImagesAction = async (limit: number) => {
     return {
         error: null,
         success: true,
-        data: imageWithUrl || null
+        data: imageWithUrl
     }
 }
 
-export const deleteImageAction = async (id: string, imageName: string) => {
+export const deleteImageAction = async (id: string, imageName: string | null) => {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {

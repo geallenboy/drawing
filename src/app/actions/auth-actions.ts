@@ -54,3 +54,46 @@ export const logoutAction = async (): Promise<void> => {
     redirect("/login")
 
 }
+
+export const updateProfileAction = async ({ fullName }: { fullName: string }): Promise<AuthResponse> => {
+    const supbase = await createClient();
+
+    const { data: profleData, error } = await supbase.auth.updateUser({
+        data: { fullName }
+    })
+
+    return {
+        error: error?.message || "There was an error updating the profile",
+        success: !error,
+        data: profleData || null
+    }
+
+}
+
+export const resetPasswordAction = async ({ email }: { email: string }): Promise<AuthResponse> => {
+    const supbase = await createClient();
+
+    const { data: profleData, error } = await supbase.auth.resetPasswordForEmail(email)
+
+    return {
+        error: error?.message || "There was an error sending the reset password email!",
+        success: !error,
+        data: profleData || null
+    }
+
+}
+
+export const changePasswordAction = async (newPassword: string): Promise<AuthResponse> => {
+    const supbase = await createClient();
+
+    const { data, error } = await supbase.auth.updateUser({
+        password: newPassword
+    })
+
+    return {
+        error: error?.message || "There was an error changing the password!",
+        success: !error,
+        data: data || null
+    }
+
+}

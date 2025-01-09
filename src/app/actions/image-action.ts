@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Database } from "@datatypes.types";
 import { imageMeta } from "image-meta"
 import { randomUUID } from "crypto"
+import { getCreditsAction } from "./credits-action";
 
 
 const replicate = new Replicate({
@@ -24,6 +25,14 @@ export const generateImageAction = async (input: (z.infer<typeof ImageGeneration
     if (!process.env.REPLICATE_API_TOKEN) {
         return {
             error: "The replicate api token is not set!",
+            success: false,
+            data: null
+        }
+    }
+    const { data: credits } = await getCreditsAction();
+    if (!credits?.image_generation_count || credits.image_generation_count <= 0) {
+        return {
+            error: "No credits availabel",
             success: false,
             data: null
         }

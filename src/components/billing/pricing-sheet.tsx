@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/sheet";
 import { Tables } from "@datatypes.types";
 import { User } from "@supabase/supabase-js";
-import { Button } from "../ui/button";
+import { Button } from "@/components/ui/button";
 import Pricing from "./pricing";
 
 type Product = Tables<"products">;

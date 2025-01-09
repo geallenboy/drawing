@@ -1,4 +1,6 @@
+import { getCreditsAction } from "@/app/actions/credits-action";
 import PlanSummarry from "@/components/billing/plan-summary";
+import Pricing from "@/components/billing/pricing";
 import { getProducts, getSubscription, getUser } from "@/lib/supabase/queries";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
@@ -14,6 +16,7 @@ const BillingPage = async () => {
   if (!user) {
     return redirect("/login");
   }
+  const { data: credits } = await getCreditsAction();
   return (
     <section className="container mx-auto">
       <h1 className="text-3xl font-bold tracking-tight mb-2">
@@ -24,10 +27,23 @@ const BillingPage = async () => {
       </p>
       <div className="grid gap-10">
         <PlanSummarry
+          credits={credits}
           subscription={subscription}
           user={user}
           products={products || []}
         />
+        {subscription.status === "active" && (
+          <Pricing
+            user={user}
+            products={products ?? []}
+            subscription={subscription}
+            showInterval={false}
+            className={"!p-0 max-w-full"}
+            activeProduct={
+              subscription?.prices?.products?.name.toLowerCase() || "pro"
+            }
+          />
+        )}
       </div>
     </section>
   );

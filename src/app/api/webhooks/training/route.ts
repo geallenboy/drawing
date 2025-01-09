@@ -35,8 +35,7 @@ export async function POST(req: Request) {
             .createHmac('sha256', secretBytes)
             .update(signedContent)
             .digest('base64');
-        console.log(signature);
-        console.log(body)
+
 
         const expectedSignatures = webhookSignature.split(' ').map(sig => sig.split(',')[1]);
         const isValid = expectedSignatures.some(expectedSignature => expectedSignature === signature);
@@ -68,9 +67,6 @@ export async function POST(req: Request) {
                 training_time: body.metrics?.total_time ?? null,
                 version: body.output?.version.split(":")[1] ?? null,
             }).eq("user_id", userId).eq("model_name", modelName)
-
-
-
         } else {
             //handle the failed and the canceled status
             await resend.emails.send({
@@ -84,6 +80,13 @@ export async function POST(req: Request) {
                 training_status: body.status,
             }).eq("user_id", userId).eq("model_name", modelName)
 
+            //getting old credits
+            const { data: userCredits, error: creditsError } = await supabaseAdmin.from("credits").select("model_training_count").eq("user_id", userId).single();
+            if (creditsError) {
+                throw new Error("Error getting user credits")
+            }
+            //updating the credits
+            await supabaseAdmin.from("credits").update({ model_training_count: userCredits?.model_training_count + 1 }).eq("user_id", userId).single();
 
         }
         //delete the training data from supabase storage

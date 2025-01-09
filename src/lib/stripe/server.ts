@@ -51,6 +51,11 @@ export async function checkoutWithStripe(
             allow_promotion_codes: true,
             billing_address_collection: 'required',
             customer,
+            client_reference_id: user?.id,
+            metadata: {
+                image_generation_count: (price.metadata as { image_generation_count?: number }).image_generation_count ?? 0,
+                model_training_count: (price.metadata as { model_training_count?: number }).model_training_count ?? 0
+            },
             customer_update: {
                 address: 'auto'
             },
@@ -152,7 +157,7 @@ export async function createStripePortal(currentPath: string) {
         try {
             const { url } = await stripe.billingPortal.sessions.create({
                 customer,
-                return_url: getURL('/dashboard')
+                return_url: getURL('/billing')
             });
             if (!url) {
                 throw new Error('Could not create billing portal');

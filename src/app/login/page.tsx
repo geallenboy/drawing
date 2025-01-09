@@ -3,8 +3,17 @@ import AuthImg from "@/public/login-banner.jpeg";
 import Image from "next/image";
 import Logo from "@/components/logo";
 import AuthForm from "@/components/login/auth-form";
+interface SearchParamsProps {
+  state?: string;
+}
 
-const LoginPage = () => {
+const LoginPage = async ({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParamsProps>;
+}) => {
+  const { state } = await searchParams;
+  console.log(state);
   return (
     <main className="h-screen grid grid-cols-2 relative">
       <div className="relative w-full flex flex-col bg-muted p-10 text-primary-foreground">
@@ -33,7 +42,7 @@ const LoginPage = () => {
       </div>
       <div className="relative flex flex-col items-center justify-center p-8 h-full w-full">
         <div className=" w-[400px] mx-auto">
-          <AuthForm />
+          <AuthForm state={state ?? "login"} />
         </div>
       </div>
     </main>

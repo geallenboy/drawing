@@ -42,7 +42,8 @@ export async function updateSession(request: NextRequest) {
         !request.nextUrl.pathname.startsWith('/login') &&
         !request.nextUrl.pathname.startsWith('/auth') &&
         !request.nextUrl.pathname.startsWith('/api/webhooks/training') &&
-        !request.nextUrl.pathname.startsWith('/api/webhooks/stripe')
+        !request.nextUrl.pathname.startsWith('/api/webhooks/stripe') &&
+        !request.nextUrl.pathname.startsWith('/')
     ) {
         // no user, potentially respond by redirecting the user to the login page
         const url = request.nextUrl.clone()

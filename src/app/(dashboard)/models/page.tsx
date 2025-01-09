@@ -1,9 +1,9 @@
-import { fetachModelsAction } from "@/app/actions/model-actions";
+import { getModelsAction } from "@/app/actions/model-actions";
 import ModelsList from "@/components/model/models-list";
 import React from "react";
 
 const ModelsPage = async () => {
-  const data = await fetachModelsAction();
+  const data = await getModelsAction();
 
   return (
     <section className="container mx-auto">

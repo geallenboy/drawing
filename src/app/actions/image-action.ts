@@ -157,7 +157,7 @@ export const storeImagesAction = async (data: storeImageinput[]) => {
     }
 }
 
-export const getImagesAction = async (limit: number) => {
+export const getImagesAction = async (limit?: number) => {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser();
 

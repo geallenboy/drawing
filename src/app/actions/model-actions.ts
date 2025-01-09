@@ -13,7 +13,7 @@ export const getPresignedstorageUrlAction = async (filePath: string) => {
     }
 }
 
-export async function fetachModelsAction() {
+export async function getModelsAction() {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 

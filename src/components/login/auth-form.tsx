@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import LoginForm from "./login-form";
-import { Button } from "../ui/button";
+import { Button } from "@/components/ui/button";
 import SignUpForm from "./signup-form";
 import Link from "next/link";
 import ResetPassword from "./reset-password";

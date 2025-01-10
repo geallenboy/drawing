@@ -81,7 +81,7 @@ const ModelsList = ({ models }: ModelsListProps) => {
   };
 
   return (
-    <div className="grid gap-6 grid-cols-3">
+    <div className="grid gap-6 grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
       {data?.map((model) => (
         <Card key={model.id} className="relative flex flex-col overflow-hidden">
           <CardHeader>

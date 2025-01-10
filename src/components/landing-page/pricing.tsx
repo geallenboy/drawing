@@ -1,13 +1,13 @@
 "use client";
 import React, { useState } from "react";
-import AnimatedGradientText from "../ui/animated-gradient-text";
+import AnimatedGradientText from "@/components/ui/animated-gradient-text";
 import { cn } from "@/lib/utils";
-import { Label } from "../ui/label";
-import { Switch } from "../ui/switch";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Tables } from "@datatypes.types";
-import { Badge } from "../ui/badge";
+import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
-import { Button } from "../ui/button";
+import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
 
 type Product = Tables<"products">;
@@ -24,8 +24,11 @@ const Pricing = ({ products, mostPopularProduct = "Pro" }: PricingProps) => {
   const [billingInterval, setBillingInterval] = useState("month");
   console.log(products);
   return (
-    <section className="w-full bg-muted flex flex-col items-center justify-center">
-      <div className="w-full container mx-auto py-32 flex flex-col items-center justify-center space-y-8">
+    <section
+      id="pricing"
+      className="w-full bg-muted flex flex-col items-center justify-center"
+    >
+      <div className="w-full container mx-auto py-32 px-6 sm:px-8 sm:mx-8 lg:max-auto flex flex-col items-center justify-center space-y-8">
         <div className="text-center flex flex-col items-center justify-center">
           <AnimatedGradientText>
             <span
@@ -60,7 +63,7 @@ const Pricing = ({ products, mostPopularProduct = "Pro" }: PricingProps) => {
             Yearly
           </Label>
         </div>
-        <div className="grid grid-cols-3 place-items-center mx-auto gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 place-items-center mx-auto gap-y-8 sm:gap-8 lg:max-w-4xl xl:max-w-none">
           {products.map((product) => {
             const price = product?.prices?.find(
               (price) => price.interval === billingInterval

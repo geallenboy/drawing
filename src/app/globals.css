@@ -12,6 +12,19 @@ body {
   }
 }
 
+.subHeading {
+  @apply text-2xl xs:text-3xl sm:text-4xl font-bold;
+}
+.subText {
+  @apply text-sm xs:text-base text-muted-foreground lg:max-w-3xl;
+}
+
+@media (min-width: 1536px) {
+  .container {
+    max-width: 1400px;
+  }
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;

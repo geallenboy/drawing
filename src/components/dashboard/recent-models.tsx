@@ -5,9 +5,9 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "../ui/card";
+} from "@/components/ui/card";
 import { Database } from "@datatypes.types";
-import { Badge } from "../ui/badge";
+import { Badge } from "@/components/ui/badge";
 
 interface RecentmodelsProps {
   models: Database["public"]["Tables"]["models"]["Row"][];

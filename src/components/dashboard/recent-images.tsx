@@ -11,13 +11,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
-import { Button } from "../ui/button";
+import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 
-interface RecetImagesProps {
-  images: Array<Tables<"generated_images">> & {
+/**
+ *  & {
     url: string | undefined;
   };
+ */
+interface RecetImagesProps {
+  images: Tables<"generated_images">[];
 }
 
 const RecentImage = ({ images }: RecetImagesProps) => {
@@ -37,7 +40,7 @@ const RecentImage = ({ images }: RecetImagesProps) => {
   }
 
   return (
-    <Card className="col-span-3">
+    <Card className="col-span-full xl:col-span-3">
       <CardHeader>
         <CardTitle>Recent Generations</CardTitle>
       </CardHeader>
@@ -47,7 +50,7 @@ const RecentImage = ({ images }: RecetImagesProps) => {
             {images.map((image) => (
               <CarouselItem
                 key={image.id}
-                className="md:basis-1/2 lg:basis-1/3"
+                className=" basis-full md:basis-1/2 lg:basis-1/3"
               >
                 <div className="space-y-2">
                   <div

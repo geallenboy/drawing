@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/form";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Input } from "@/components/ui/input";
-import { Button } from "../ui/button";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { getPresignedstorageUrlAction } from "@/app/actions/model-actions";
 
@@ -105,7 +105,7 @@ const ModelTraningForm = () => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <fieldset className="grid max-w-5xl bg-background p-8 rounded-lg gap-6 border">
+        <fieldset className="grid max-w-5xl bg-background p-4 sm:p-8 rounded-lg gap-6 border">
           <FormField
             control={form.control}
             name="modelName"

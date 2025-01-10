@@ -9,9 +9,9 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Button } from "../ui/button";
+import { Button } from "@/components/ui/button";
 import { Download, Trash2 } from "lucide-react";
-import { Badge } from "../ui/badge";
+import { Badge } from "@/components/ui/badge";
 import DeleteImage from "./delete-image";
 
 interface ImageDialogProps {

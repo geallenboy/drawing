@@ -5,15 +5,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { resetPasswordAction } from "@/app/actions/auth-actions";
+import { useTranslations } from "next-intl";
 
 interface SecuritySettingProps {
   user: User | null;
 }
 const SecuritySetting = ({ user }: SecuritySettingProps) => {
   const toastId = useId();
-
+  const securitySettingT = useTranslations("account.securitySetting");
   const handleChangePassword = async () => {
-    toast.loading("Sending password reset email...", { id: toastId });
+    toast.loading(securitySettingT("infoLoading"), { id: toastId });
     try {
       const { success, error } = await resetPasswordAction({
         email: user?.email || "",
@@ -21,31 +22,27 @@ const SecuritySetting = ({ user }: SecuritySettingProps) => {
       if (!success) {
         toast.error(error, { id: toastId });
       } else {
-        toast.success(
-          "Password reset email sent! Please check your email for instructions",
-          { id: toastId }
-        );
+        toast.success(securitySettingT("infoSuccess"), { id: toastId });
       }
     } catch (error: any) {
-      toast.error(
-        error?.message || "There is an error sending the password reset email",
-        { id: toastId }
-      );
+      toast.error(error?.message || securitySettingT("infoError"), {
+        id: toastId,
+      });
     }
   };
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Security</CardTitle>
+        <CardTitle>{securitySettingT("name")}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-2">
-          <h3 className="font-medium">Password</h3>
+          <h3 className="font-medium"> {securitySettingT("password")}</h3>
           <p className="text-sm text-muted-foreground">
-            Change your password to keep your account secure
+            {securitySettingT("desc")}
           </p>
           <Button variant={"outline"} onClick={handleChangePassword}>
-            Change password
+            {securitySettingT("button")}
           </Button>
         </div>
       </CardContent>

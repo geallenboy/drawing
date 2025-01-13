@@ -9,33 +9,35 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 const NavItems = () => {
+  const homeT = useTranslations("home.navigtion");
   return (
     <>
       <Link
         href={"#features"}
         className="text-sm font-medium hover:underline underline-offset-4"
       >
-        Features
+        {homeT("features")}
       </Link>
       <Link
         href={"#pricing"}
         className="text-sm font-medium hover:underline underline-offset-4"
       >
-        Pricing
+        {homeT("pricing")}
       </Link>
       <Link
         href={"#faqs"}
         className="text-sm font-medium hover:underline underline-offset-4"
       >
-        FAQs
+        {homeT("faqs")}
       </Link>
       <Link
         href={"/login?state=signup"}
         className="text-sm font-medium hover:underline underline-offset-4"
       >
-        <Button variant={"outline"}>Sign up</Button>
+        <Button variant={"outline"}> {homeT("signup")}</Button>
       </Link>
     </>
   );

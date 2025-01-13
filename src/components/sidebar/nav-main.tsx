@@ -1,17 +1,6 @@
 "use client";
 
-import {
-  CreditCard,
-  Frame,
-  Image,
-  Images,
-  Layers,
-  Settings2,
-  Sparkles,
-  SquareTerminal,
-} from "lucide-react";
 import { cn } from "@/lib/utils";
-
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -21,52 +10,19 @@ import {
 } from "@/components/ui/sidebar";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-const data = [
-  {
-    title: "Dashboard",
-    url: "/dashboard",
-    icon: SquareTerminal,
-    isActive: true,
-  },
-  {
-    title: "Generate Image",
-    url: "/image-generation",
-    icon: Image,
-  },
-  {
-    title: "My Models",
-    url: "/models",
-    icon: Frame,
-  },
-  {
-    title: "Train Model",
-    url: "/model-training",
-    icon: Layers,
-  },
-  {
-    title: "My Images",
-    url: "/gallery",
-    icon: Images,
-  },
-  {
-    title: "Billing",
-    url: "/billing",
-    icon: CreditCard,
-  },
-  {
-    title: "Settings",
-    url: "/account-settings",
-    icon: Settings2,
-  },
-];
+import { getI18n } from "@/context";
+import { navList } from "@/context/sidebar";
+import { useTranslations } from "next-intl";
 
 export const NavMain = () => {
   const pathname = usePathname();
+  const navData = getI18n(navList);
+  const sidebarT = useTranslations("sidebar");
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>Platform</SidebarGroupLabel>
+      <SidebarGroupLabel>{sidebarT("name")}</SidebarGroupLabel>
       <SidebarMenu>
-        {data.map((item) => (
+        {navData.map((item: any) => (
           <Link
             href={item.url}
             key={item.title}

@@ -1,7 +1,7 @@
-import * as React from "react";
+import React from "react";
 import { Sparkles } from "lucide-react";
-import { NavMain } from "@/components/nav-main";
-import { NavUser } from "@/components/nav-user";
+import { NavMain } from "@/components/sidebar/nav-main";
+import { NavUser } from "@/components/sidebar/nav-user";
 import {
   Sidebar,
   SidebarContent,
@@ -11,12 +11,15 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { createClient } from "@/lib/supabase/server";
+import Title from "./title";
 
 export const AppSidebar = async ({
   ...props
 }: React.ComponentProps<typeof Sidebar>) => {
   const supbase = await createClient();
-  const { data } = await supbase.auth.getUser();
+  const {
+    data: { user },
+  } = await supbase.auth.getUser();
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -27,10 +30,7 @@ export const AppSidebar = async ({
           <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
             <Sparkles className="size-4" />
           </div>
-          <div className="grid flex-1 text-left text-sm leading-tight">
-            <span className="truncate font-semibold">name AI</span>
-            <span className="truncate text-xs">Pro</span>
-          </div>
+          <Title />
         </SidebarMenuButton>
       </SidebarHeader>
       <SidebarContent>
@@ -39,8 +39,8 @@ export const AppSidebar = async ({
       <SidebarFooter>
         <NavUser
           user={{
-            name: data.user.user_metadata.fullName,
-            email: data.user.user_metadata.email,
+            name: user?.user_metadata.fullName,
+            email: user?.user_metadata.email,
           }}
         />
       </SidebarFooter>

@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 type Product = Tables<"products">;
 type Price = Tables<"prices">;
@@ -22,7 +23,7 @@ interface PricingProps {
 
 const Pricing = ({ products, mostPopularProduct = "Pro" }: PricingProps) => {
   const [billingInterval, setBillingInterval] = useState("month");
-  console.log(products);
+  const priceT = useTranslations("home.price");
   return (
     <section
       id="pricing"
@@ -36,21 +37,19 @@ const Pricing = ({ products, mostPopularProduct = "Pro" }: PricingProps) => {
                 `inline animate-gradient bg-gradient-to-r from-[#ffaa40] via-[#9c40ff] to-[#ffaa40] bg-[length:var(--bg-size)_100%] bg-clip-text text-transparent`
               )}
             >
-              Price
+              {priceT("name")}
             </span>
           </AnimatedGradientText>
           <h1 className="mt-4 capitalize text-4xl font-bold">
-            Choose the plan that fits your needs
+            {priceT("title1")}
           </h1>
           <p className="text-base text-muted-foreground max-w-3xl">
-            Choose an offordable plan that is packed with the best features for
-            engaging your audience,createing customer loyalty and driving sales.
-            engaging your
+            {priceT("title2")}
           </p>
         </div>
         <div className="flex justify-center items-center space-x-4 py-8">
           <Label htmlFor="pricing-switch" className="font-semibold text-base">
-            Monthly
+            {priceT("title3")}
           </Label>
           <Switch
             id="pricing-switch"
@@ -60,7 +59,7 @@ const Pricing = ({ products, mostPopularProduct = "Pro" }: PricingProps) => {
             }
           />
           <Label htmlFor="pricing-switch" className="font-semibold text-base">
-            Yearly
+            {priceT("title4")}
           </Label>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 place-items-center mx-auto gap-y-8 sm:gap-8 lg:max-w-4xl xl:max-w-none">
@@ -92,7 +91,7 @@ const Pricing = ({ products, mostPopularProduct = "Pro" }: PricingProps) => {
                     {product.name?.toLowerCase() ===
                     mostPopularProduct.toLowerCase() ? (
                       <Badge className="border-border font-semibold">
-                        Most Popular
+                        {priceT("title5")}
                       </Badge>
                     ) : null}
                   </h2>
@@ -117,12 +116,12 @@ const Pricing = ({ products, mostPopularProduct = "Pro" }: PricingProps) => {
                           : "secondary"
                       }
                     >
-                      Subscribe
+                      {priceT("title6")}
                     </Button>
                   </Link>
                 </div>
                 <div className="pt-6 pb-8 px-6">
-                  <h3>What's included</h3>
+                  <h3> {priceT("title7")}</h3>
                   <ul className="mt-6 space-y-2">
                     {Object.values(product.metadata || {}).map(
                       (feature, index) => {

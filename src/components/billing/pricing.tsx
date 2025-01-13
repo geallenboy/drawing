@@ -12,6 +12,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { getErrorRedirect } from "@/lib/helpers";
 import { getStripe } from "@/lib/stripe/client";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 type Product = Tables<"products">;
 type Price = Tables<"prices">;
@@ -54,7 +55,7 @@ const renderPricingButton = ({
   hanleStripePortalRequest: () => Promise<void>;
   hanleStripeCheckout: (price: Price) => Promise<void>;
 }) => {
-  //case1:user has sactive sub for this product
+  const priceT = useTranslations("billing.price");
   if (
     user &&
     subscription &&
@@ -67,7 +68,7 @@ const renderPricingButton = ({
         variant={"default"}
         onClick={() => hanleStripePortalRequest}
       >
-        Manage Subscription
+        {priceT("btn1")}
       </Button>
     );
   }
@@ -79,7 +80,7 @@ const renderPricingButton = ({
         variant={"secondary"}
         onClick={() => hanleStripePortalRequest}
       >
-        Switch Plan
+        {priceT("btn2")}
       </Button>
     );
   }
@@ -95,7 +96,7 @@ const renderPricingButton = ({
         }
         onClick={() => hanleStripeCheckout(price)}
       >
-        Subscribe
+        {priceT("btn3")}
       </Button>
     );
   }
@@ -111,7 +112,7 @@ const renderPricingButton = ({
       }
       onClick={() => hanleStripeCheckout(price)}
     >
-      Subscribe
+      {priceT("btn3")}
     </Button>
   );
 };
@@ -128,9 +129,9 @@ const Pricing = ({
   const [billingInterval, setBillingInterval] = useState("month");
   const currentPath = usePathname();
   const router = useRouter();
-  console.log(products, subscription);
+  const priceT = useTranslations("billing.price");
+
   const hanleStripeCheckout = async (price: Price) => {
-    console.log("Handle stripe checkout function:", price);
     if (!user) {
       return router.push("/login");
     }
@@ -146,8 +147,8 @@ const Pricing = ({
       return router.push(
         getErrorRedirect(
           currentPath,
-          "An unkniw error occurred",
-          "Please try again laterr or contanct us."
+          priceT("infoError1"),
+          priceT("infoError1")
         )
       );
     }
@@ -156,7 +157,7 @@ const Pricing = ({
     stripe?.redirectToCheckout({ sessionId });
   };
   const hanleStripePortalRequest = async () => {
-    toast.info("Rediecting to stripe portal...");
+    toast.info(priceT("info1"));
     const redirectUrl = await createStripePortal(currentPath);
     return router.push(redirectUrl);
   };
@@ -170,7 +171,7 @@ const Pricing = ({
       {showInterval && (
         <div className="flex justify-center items-center space-x-4 py-8">
           <Label htmlFor="pricing-switch" className="font-semibold text-base">
-            Monthly
+            {priceT("monthly")}
           </Label>
           <Switch
             id="pricing-switch"
@@ -180,7 +181,7 @@ const Pricing = ({
             }
           />
           <Label htmlFor="pricing-switch" className="font-semibold text-base">
-            Yearly
+            {priceT("yearly")}
           </Label>
         </div>
       )}
@@ -213,13 +214,13 @@ const Pricing = ({
                   {product.name?.toLowerCase() ===
                   activeProduct.toLowerCase() ? (
                     <Badge className="border-border font-semibold">
-                      Selected
+                      {priceT("selected")}
                     </Badge>
                   ) : null}
                   {product.name?.toLowerCase() ===
                   mostPopularProduct.toLowerCase() ? (
                     <Badge className="border-border font-semibold">
-                      Most Popular
+                      {priceT("mostPopular")}
                     </Badge>
                   ) : null}
                 </h2>

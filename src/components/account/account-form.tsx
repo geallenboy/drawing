@@ -24,6 +24,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { updateProfileAction } from "@/app/actions/auth-actions";
+import { useTranslations } from "next-intl";
 
 interface AccountFormProps {
   user: User | null;
@@ -42,26 +43,28 @@ const AccountForm = ({ user }: AccountFormProps) => {
       email: user?.email,
     },
   });
+  const accountFormT = useTranslations("account.accountForm");
   // 2. Define a submit handler.
   const onSubmit = async (values: z.infer<typeof accountFormSchema>) => {
-    toast.loading("Updating the profile...", { id: toastId });
+    toast.loading(accountFormT("infoLoading"), { id: toastId });
     try {
       const { success, error } = await updateProfileAction(values);
       if (!success) {
         toast.error(error, { id: toastId });
       } else {
-        toast.success("Profile updated successfully", { id: toastId });
+        toast.success(accountFormT("successInfo"), { id: toastId });
       }
     } catch (error: any) {
-      toast.error(error?.message || "profile updated failed", { id: toastId });
+      toast.error(error?.message || accountFormT("failedInfo"), {
+        id: toastId,
+      });
     }
-    console.log(values);
   };
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Profile</CardTitle>
-        <CardDescription>Update your personal infomation</CardDescription>
+        <CardTitle>{accountFormT("name")}</CardTitle>
+        <CardDescription>{accountFormT("desc")}</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -71,7 +74,7 @@ const AccountForm = ({ user }: AccountFormProps) => {
               name="fullName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>fullName</FormLabel>
+                  <FormLabel>{accountFormT("fullName")}</FormLabel>
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
@@ -85,18 +88,16 @@ const AccountForm = ({ user }: AccountFormProps) => {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>email</FormLabel>
+                  <FormLabel>{accountFormT("email")}</FormLabel>
                   <FormControl>
                     <Input disabled {...field} />
                   </FormControl>
-                  <FormDescription>
-                    Your email address is used for sign in add communication.
-                  </FormDescription>
+                  <FormDescription>{accountFormT("emailDesc")}</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <Button type="submit">update profile</Button>
+            <Button type="submit">{accountFormT("button")}</Button>
           </form>
         </Form>
       </CardContent>

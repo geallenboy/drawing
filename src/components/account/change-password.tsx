@@ -18,32 +18,33 @@ import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { changePasswordAction } from "@/app/actions/auth-actions";
 import { redirect } from "next/navigation";
+import { useTranslations } from "next-intl";
 const passwordValidationRegex = new RegExp(
   "^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{8,})"
 );
-const formSchema = z
-  .object({
-    password: z
-      .string()
-      .min(8, {
-        message: "Password must be at least 8 characters long.",
-      })
-      .regex(passwordValidationRegex, {
-        message:
-          "Password must contain 8 characters,1 uppercase letter,1 lowercase letter,1 number and 1 special character",
-      }),
-    confirmPassword: z.string({
-      required_error: "Confirm password is required!",
-    }),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Password don't match",
-    path: ["confirmPassword"],
-  });
 
 export const ChangePassword = ({ className }: { className: string }) => {
   const [loading, setLoading] = useState(false);
   const toastId = useId();
+  const changePasswordT = useTranslations("account.changePassword");
+  const formSchema = z
+    .object({
+      password: z
+        .string()
+        .min(8, {
+          message: changePasswordT("passwordMessage"),
+        })
+        .regex(passwordValidationRegex, {
+          message: changePasswordT("passwordRegex"),
+        }),
+      confirmPassword: z.string({
+        required_error: changePasswordT("passwordConfirmPassword"),
+      }),
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+      message: changePasswordT("passwordRefine"),
+      path: ["confirmPassword"],
+    });
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -52,7 +53,7 @@ export const ChangePassword = ({ className }: { className: string }) => {
     },
   });
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    toast.loading("Signing in...", { id: toastId });
+    toast.loading(changePasswordT("infoLoading"), { id: toastId });
     setLoading(true);
 
     try {
@@ -61,7 +62,7 @@ export const ChangePassword = ({ className }: { className: string }) => {
         toast.error(String(error), { id: toastId });
         setLoading(false);
       } else {
-        toast.success("Password is successfully updated!", { id: toastId });
+        toast.success(changePasswordT("infoSuccess"), { id: toastId });
         setLoading(false);
         redirect("/dashboard");
       }
@@ -75,10 +76,10 @@ export const ChangePassword = ({ className }: { className: string }) => {
     <div className={cn("grid gap-6", className)}>
       <div className="flex flex-col space-y-2 text-center">
         <h1 className="text-2xl font-semibold tracking-tight">
-          Change Password
+          {changePasswordT("name")}
         </h1>
         <p className="text-sm text-muted-foreground">
-          Enter your new password below to change/update your password.
+          {changePasswordT("desc")}
         </p>
       </div>
       <Form {...form}>
@@ -88,12 +89,12 @@ export const ChangePassword = ({ className }: { className: string }) => {
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>password</FormLabel>
+                <FormLabel> {changePasswordT("password")}</FormLabel>
                 <FormControl>
                   <Input type={"password"} {...field} />
                 </FormControl>
                 <FormDescription>
-                  Enter a strong password that meets the requirements above.
+                  {changePasswordT("passwordDesc")}
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -104,24 +105,25 @@ export const ChangePassword = ({ className }: { className: string }) => {
             name="confirmPassword"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>confirmPassword</FormLabel>
+                <FormLabel>{changePasswordT("confirmPassword")}</FormLabel>
                 <FormControl>
                   <Input type={"password"} {...field} />
                 </FormControl>
                 <FormDescription>
-                  Re-enter your new password to confirm.
+                  {changePasswordT("confirmPasswordDesc")}
                 </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
-
           <Button type="submit" className="w-full p-4">
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {loading ? "Changing password..." : "Change Password"}
+            {loading
+              ? changePasswordT("loading1")
+              : changePasswordT("loading2")}
           </Button>
           <div className="text-center text-sm text-muted-foreground">
-            Make sure to remember your new password or store it securely.
+            {changePasswordT("info")}
           </div>
         </form>
       </Form>

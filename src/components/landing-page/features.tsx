@@ -2,31 +2,14 @@ import React from "react";
 import AnimatedGradientText from "@/components/ui/animated-gradient-text";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
-import { ImageIcon, Package2, Palette } from "lucide-react";
 import dashboardImg from "@/public/dashboard-img.png";
-
-const featureList = [
-  {
-    title: "AI-Powered Photos",
-    description:
-      " Instantly transform your photos into high-quality, lifelike images with the power of AI. Whether you need fresh content for social media, professional shots for LinkedIn, or a fun set of images for personal project.",
-    icon: <ImageIcon className="w-6 h-6" strokeWidth={1.5} />,
-  },
-  {
-    title: "Diverse Photo Packs at Your Fingertips",
-    description:
-      "Instantly transform your photos into high-quality, lifelike images with the power of AI. Whether you need fresh content for social media, professional shots for LinkedIn, or a fun set of images for personal project. ",
-    icon: <Package2 className="w-6 h-6" strokeWidth={1.5} />,
-  },
-  {
-    title: "Customizable Photo Generation",
-    description:
-      "Instantly transform your photos into high-quality, lifelike images with the power of AI. Whether you need fresh content for social media, professional shots for LinkedIn, or a fun set of images for personal project.",
-    icon: <Palette className="w-6 h-6" strokeWidth={1.5} />,
-  },
-];
+import { getI18n } from "@/context";
+import { featureList } from "@/context/home";
+import { useTranslations } from "next-intl";
 
 const Features = () => {
+  const featureData = getI18n(featureList);
+  const featureT = useTranslations("home.features");
   return (
     <section
       id="features"
@@ -41,21 +24,18 @@ const Features = () => {
                 `inline animate-gradient bg-gradient-to-r from-[#ffaa40] via-[#9c40ff] to-[#ffaa40] bg-[length:var(--bg-size)_100%] bg-clip-text text-transparent`
               )}
             >
-              Features
+              {featureT("name")}
             </span>
           </AnimatedGradientText>
           <h2 className="text-2xl xs:text-3xl sm:text-4xl font-bold">
-            Unlock Unlimited Possibilities with Pictoria AI
+            {featureT("title")}
           </h2>
           <p className="text-base text-muted-foreground lg:max-w-[75%]">
-            Our platform offers a wide range of features designed to enhance
-            your image creation experience. From easy-to-use editing tools to
-            powerful AI-powered image generation, we have everything you need to
-            bring your ideas to life.
+            {featureT("text")}
           </p>
         </div>
         <div className="flex flex-col justify-start items-start order-2 lg:order-1">
-          {featureList.map((featrue) => {
+          {featureData.map((featrue: any) => {
             return (
               <div
                 key={featrue.title}

@@ -1,0 +1,158 @@
+{
+  "LocaleSwitcher": {
+    "cn": "China",
+    "en": "English",
+    "label": "Language"
+  },
+  "app": {
+    "name": "Image AI",
+    "textPro": "Pro"
+  },
+  "sidebar": {
+    "name": "Platform",
+    "upgrade": "Upgrade",
+    "settings": "Settings",
+    "billing": "Billing"
+  },
+  "home": {
+    "navigtion": {
+      "features": "Features",
+      "pricing": "Pricing",
+      "faqs": "FAQs",
+      "signup": "Sign up"
+    },
+    "faqs": {
+      "name": "FAQs",
+      "title": "Frequently Asked Questions",
+      "text": "Here are some of the most frequently asked questions about our product."
+    },
+    "features": {
+      "name": "features",
+      "title": " Unlock Unlimited Possibilities with Pictoria AI",
+      "text": " Our platform offers a wide range of features designed to enhance your image creation experience. From easy-to-use editing tools to powerful AI-powered image generation, we have everything you need to bring your ideas to life."
+    },
+    "hero": {
+      "title1": "Try new flux model",
+      "title2": "Transform your photos with the power of AI",
+      "title3": " From LinkedIn headshots to Instagram influencer photos, Pictoria AI&apos;s state-of-the-art technology ensures you always look your best. Create, edit, and generate images effortlessly.",
+      "title4": "Loved by 1k+ customers",
+      "title5": " Crreate Your First AI Model"
+    },
+    "price": {
+      "name": "price",
+      "title1": "Choose the plan that fits your needs",
+      "title2": "Choose an offordable plan that is packed with the best features for engaging your audience,createing customer loyalty and driving sales. engaging your",
+      "title3": "Monthly",
+      "title4": "Yearly",
+      "title5": "Most Popular",
+      "title6": "Subscribe",
+      "title7": "What's included"
+    },
+    "footer": {
+      "title1": "Image AI Inc. All rights reserved.",
+      "title2": "Tems of Service",
+      "title3": "Privacy Policy"
+    },
+    "review": {
+      "title1": "Testimonials",
+      "title2": "What Our Users Say",
+      "title3": " Discover why thousands are choosing Pictoria AI for effortless,high-quality photo generation, from LinkedIn headshots to vibrant social media content."
+    },
+    "ready": {
+      "title1": "Ready to Transform Your Photos?",
+      "title2": "Join thousands of users who are already creating amazing AI-generated images.",
+      "title3": "  Create Your First AI Model"
+    }
+  },
+  "dashboard": {
+    "title": "Welcome back"
+  },
+  "modelTraining": {
+    "title": "Train Model",
+    "desc": "Train anew model with yout own image"
+  },
+  "account": {
+    "title": "Account settings",
+    "desc": "Manage your account settings and preferences.",
+    "accountForm": {
+      "name": "Profile",
+      "desc": "Update your personal infomation",
+      "fullName": "fullName",
+      "email": "email",
+      "emailDesc": "Your email address is used for sign in add communication.",
+      "button": "update profile",
+      "infoLoading": "Updating the profile...",
+      "successInfo": "Profile updated successfully",
+      "failedInfo": "profile updated failed"
+    },
+    "changePassword": {
+      "name": "Change Password",
+      "desc": "Enter your new password below to change/update your password.",
+      "password": "password",
+      "loading1": "Changing password...",
+      "loading2": "Change Password",
+      "passwordDesc": "Enter a strong password that meets the requirements above.",
+      "confirmPassword": "confirmPassword",
+      "confirmPasswordDesc": "Re-enter your new password to confirm.",
+      "info": "Make sure to remember your new password or store it securely.",
+      "passwordMessage": "Password must be at least 8 characters long.",
+      "passwordRegex": "Password must contain 8 characters,1 uppercase letter,1 lowercase letter,1 number and 1 special character.",
+      "passwordConfirmPassword": "Confirm password is required!",
+      "passwordRefine": "Password don't match",
+      "infoLoading": "Signing in...",
+      "infoSuccess": "Password is successfully updated"
+    },
+    "securitySetting": {
+      "name": "Security",
+      "password": "Password",
+      "desc": "Change your password to keep your account secure",
+      "button": "Change password",
+      "infoLoading": "Sending password reset email...",
+      "infoSuccess": "Password reset email sent! Please check your email for instructions",
+      "infoError": "There is an error sending the password reset email"
+    }
+  },
+  "billing": {
+    "title": "Plans & Billing",
+    "desc": "Manage your subscription and billing information.",
+    "planSummarry": {
+      "name": "Plan Summary",
+      "name1": "Price/Month",
+      "name2": "Included Credits",
+      "name3": "Renewal Date",
+      "noPlan": "No Plan",
+      "plan": "Plan",
+      "noInfo1": "Image Generation credits left",
+      "noInfo2": "0 rmmaining",
+      "noInfo3": "model training credits left",
+      "noInfo4": "Please upgrade to a plan to continue using the app.",
+      "info1": "Image Generation credits",
+      "info2": "model training credits"
+    },
+    "pricingSheet": {
+      "name": "upgrade",
+      "title": "Change subscription plan",
+      "desc": "choose a plan that fits your needs and budget to continue using our service."
+    },
+    "price": {
+      "btn1": "Manage Subscription",
+      "btn2": "Switch Plan",
+      "btn3": "Subscribe",
+      "infoError1": "An unkniw error occurred",
+      "infoError2": "Please try again laterr or contanct us.",
+      "info1": "Rediecting to stripe portal...",
+      "monthly": "Monthly",
+      "yearly": "Yearly",
+      "selected": "Selected",
+      "mostPopular": "Most Popular"
+    }
+  },
+  "gallery": {
+    "title": "My Images",
+    "desc": "Here you can see all the images you have generated .Click on an image to view details"
+  },
+  "model": {
+    "title": "My Modles",
+    "desc": "View and manage your trained models"
+  }
+}

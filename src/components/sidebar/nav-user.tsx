@@ -2,7 +2,6 @@
 
 import {
   BadgeCheck,
-  Bell,
   ChevronsUpDown,
   CreditCard,
   LogOut,
@@ -27,6 +26,7 @@ import {
 } from "@/components/ui/sidebar";
 import Link from "next/link";
 import LogoutBtn from "@/components/login/logout-btn";
+import { useTranslations } from "next-intl";
 
 export const NavUser = ({
   user,
@@ -37,7 +37,7 @@ export const NavUser = ({
   };
 }) => {
   const { isMobile } = useSidebar();
-
+  const sidebarT = useTranslations("sidebar");
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -90,7 +90,7 @@ export const NavUser = ({
             <DropdownMenuGroup>
               <DropdownMenuItem>
                 <Sparkles />
-                Upgrade to Pro
+                {sidebarT("upgrade")}
               </DropdownMenuItem>
             </DropdownMenuGroup>
 
@@ -101,7 +101,7 @@ export const NavUser = ({
               >
                 <DropdownMenuItem>
                   <BadgeCheck />
-                  Settings
+                  {sidebarT("settings")}
                 </DropdownMenuItem>
               </Link>
             </DropdownMenuGroup>
@@ -109,7 +109,7 @@ export const NavUser = ({
               <Link href={"/billing"} className="w-full cursor-pointer">
                 <DropdownMenuItem>
                   <CreditCard />
-                  Billing
+                  {sidebarT("billing")}
                 </DropdownMenuItem>
               </Link>
             </DropdownMenuGroup>

@@ -1,6 +1,7 @@
 import { getCreditsAction } from "@/app/actions/credits-action";
 import PlanSummarry from "@/components/billing/plan-summary";
 import Pricing from "@/components/billing/pricing";
+import Title from "@/components/billing/title";
 import { getProducts, getSubscription, getUser } from "@/lib/supabase/queries";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
@@ -19,12 +20,7 @@ const BillingPage = async () => {
   const { data: credits } = await getCreditsAction();
   return (
     <section className="container mx-auto">
-      <h1 className="text-3xl font-bold tracking-tight mb-2">
-        Plans & Billing
-      </h1>
-      <p className="text-muted-foreground mb-6">
-        Manage your subscription and billing information.
-      </p>
+      <Title />
       <div className="grid gap-10">
         <PlanSummarry
           credits={credits}

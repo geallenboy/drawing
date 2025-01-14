@@ -8,24 +8,23 @@ import "./globals.css";
 const MyAppFont = Nunito({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Image AI",
-  description: "Generation Image AI ",
+  title: "wiper",
+  description: "wiper"
 };
 
 export default async function RootLayout({
-  children,
+  children
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   const locale = await getLocale();
   const messages = await getMessages();
-  console.log("messages:", messages);
-  console.log("locale:", locale);
+
   return (
     <html lang={locale}>
-      <head>
+      {/* <head>
         <link rel="icon" href="./logo.svg" />
-      </head>
+      </head> */}
       <body className={`${MyAppFont.className} font-sans`}>
         <NextIntlClientProvider messages={messages}>
           {children}

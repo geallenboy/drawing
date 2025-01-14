@@ -8,7 +8,7 @@ import { createClient } from "@/lib/supabase/server";
 
 const AccountSettingsPage = async () => {
   const supabase = await createClient();
-  const user = await getUser(supabase);
+  const [user] = await Promise.all([getUser(supabase)]);
   if (!user) {
     return redirect("/login");
   }

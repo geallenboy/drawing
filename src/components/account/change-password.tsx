@@ -1,3 +1,4 @@
+"use client";
 import React, { useId, useState } from "react";
 import {
   Form,
@@ -17,15 +18,16 @@ import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { changePasswordAction } from "@/app/actions/auth-actions";
-import { redirect } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 const passwordValidationRegex = new RegExp(
   "^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{8,})"
 );
 
-export const ChangePassword = ({ className }: { className: string }) => {
+export const ChangePassword = () => {
   const [loading, setLoading] = useState(false);
   const toastId = useId();
+  const router = useRouter(); // 获取路由实例
   const changePasswordT = useTranslations("account.changePassword");
   const formSchema = z
     .object({
@@ -58,22 +60,22 @@ export const ChangePassword = ({ className }: { className: string }) => {
 
     try {
       const { success, error } = await changePasswordAction(values.password);
-      if (!success) {
-        toast.error(String(error), { id: toastId });
-        setLoading(false);
-      } else {
+      if (success) {
         toast.success(changePasswordT("infoSuccess"), { id: toastId });
         setLoading(false);
-        redirect("/dashboard");
+        router.push("/dashboard");
+      } else {
+        console.log(error, 4444);
+        toast.error(error, { id: toastId });
+        setLoading(false);
       }
     } catch (error: any) {
-      toast.error(String(error?.message), { id: toastId });
-    } finally {
+      toast.error(error?.message, { id: toastId });
       setLoading(false);
     }
   };
   return (
-    <div className={cn("grid gap-6", className)}>
+    <div className={cn("grid gap-6")}>
       <div className="flex flex-col space-y-2 text-center">
         <h1 className="text-2xl font-semibold tracking-tight">
           {changePasswordT("name")}

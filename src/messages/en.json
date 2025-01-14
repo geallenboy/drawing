@@ -18,7 +18,7 @@
       "btn": "Submit",
       "btn1": "Need an account? Sign up",
       "btn2": "Forgot pasword?",
-      "info": "signup...",
+      "info1": "login...",
       "info2": "login successfully !",
       "emailMessage": "Please enter a valid email address!",
       "passwordMessage": "Password must be at least 8 characters long."
@@ -122,10 +122,6 @@
   "dashboard": {
     "title": "Welcome back"
   },
-  "modelTraining": {
-    "title": "Train Model",
-    "desc": "Train anew model with yout own image"
-  },
   "account": {
     "title": "Account settings",
     "desc": "Manage your account settings and preferences.",
@@ -166,48 +162,5 @@
       "infoSuccess": "Password reset email sent! Please check your email for instructions",
       "infoError": "There is an error sending the password reset email"
     }
-  },
-  "billing": {
-    "title": "Plans & Billing",
-    "desc": "Manage your subscription and billing information.",
-    "planSummarry": {
-      "name": "Plan Summary",
-      "name1": "Price/Month",
-      "name2": "Included Credits",
-      "name3": "Renewal Date",
-      "noPlan": "No Plan",
-      "plan": "Plan",
-      "noInfo1": "Image Generation credits left",
-      "noInfo2": "0 rmmaining",
-      "noInfo3": "model training credits left",
-      "noInfo4": "Please upgrade to a plan to continue using the app.",
-      "info1": "Image Generation credits",
-      "info2": "model training credits"
-    },
-    "pricingSheet": {
-      "name": "upgrade",
-      "title": "Change subscription plan",
-      "desc": "choose a plan that fits your needs and budget to continue using our service."
-    },
-    "price": {
-      "btn1": "Manage Subscription",
-      "btn2": "Switch Plan",
-      "btn3": "Subscribe",
-      "infoError1": "An unkniw error occurred",
-      "infoError2": "Please try again laterr or contanct us.",
-      "info1": "Rediecting to stripe portal...",
-      "monthly": "Monthly",
-      "yearly": "Yearly",
-      "selected": "Selected",
-      "mostPopular": "Most Popular"
-    }
-  },
-  "gallery": {
-    "title": "My Images",
-    "desc": "Here you can see all the images you have generated .Click on an image to view details"
-  },
-  "model": {
-    "title": "My Modles",
-    "desc": "View and manage your trained models"
   }
 }

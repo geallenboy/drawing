@@ -1,3 +1,4 @@
+import Header from "@/components/dashboard/header";
 import Title from "@/components/dashboard/title";
 import { getUser } from "@/lib/supabase/queries";
 import { createClient } from "@/lib/supabase/server";
@@ -13,6 +14,7 @@ const DashboardPage = async () => {
   return (
     <section className="container mx-auto flex-1 space-y-6">
       <Title />
+      <Header />
     </section>
   );
 };

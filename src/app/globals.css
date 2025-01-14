@@ -11,7 +11,10 @@ body {
     max-width: 1400px;
   }
 }
-
+.ce-toolbar__content,
+.ce-block__content {
+  max-width: 100%;
+}
 .subHeading {
   @apply text-2xl xs:text-3xl sm:text-4xl font-bold;
 }

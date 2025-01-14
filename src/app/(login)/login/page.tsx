@@ -1,17 +1,16 @@
 import React from "react";
 import LoginForm from "@/components/login/login-form";
 import LoginImage from "@/components/login/login-image";
-interface SearchParamsProps {
-  state?: string;
-}
+import { createClient } from "@/lib/supabase/server";
+import { getUser } from "@/lib/supabase/queries";
+import { redirect } from "next/navigation";
 
-const LoginPage = async ({
-  searchParams,
-}: {
-  searchParams: Promise<SearchParamsProps>;
-}) => {
-  const { state } = await searchParams;
-  console.log(state);
+const LoginPage = async () => {
+  const supabase = await createClient();
+  const [user] = await Promise.all([getUser(supabase)]);
+  if (user) {
+    return redirect("/dashboard");
+  }
   return (
     <main className="h-screen grid grid-cols-2 relative">
       <LoginImage />

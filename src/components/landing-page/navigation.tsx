@@ -28,7 +28,7 @@ const NavItems = () => {
         {homeT("faqs")}
       </Link>
       <Link
-        href={"/login?state=signup"}
+        href={"/signup"}
         className="text-sm font-medium hover:underline underline-offset-4"
       >
         <Button variant={"outline"}> {homeT("signup")}</Button>

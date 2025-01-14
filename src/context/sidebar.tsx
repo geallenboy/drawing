@@ -1,4 +1,4 @@
-import { Settings2, SquareTerminal } from "lucide-react";
+import { Settings2, SquareTerminal, FileCode2, Eraser } from "lucide-react";
 
 export const navList = {
   en: [
@@ -8,6 +8,22 @@ export const navList = {
       icon: SquareTerminal,
       isActive: true,
     },
+    {
+      title: "Document",
+      url: "/document",
+      icon: FileCode2,
+    },
+    {
+      title: "Document",
+      url: "/document",
+      icon: Settings2,
+    },
+    {
+      title: "Drawing",
+      url: "/drawing",
+      icon: Eraser,
+    },
+
     {
       title: "Settings",
       url: "/account-settings",
@@ -20,6 +36,16 @@ export const navList = {
       url: "/dashboard",
       icon: SquareTerminal,
       isActive: true,
+    },
+    {
+      title: "文档",
+      url: "/document",
+      icon: FileCode2,
+    },
+    {
+      title: "绘图",
+      url: "/drawing",
+      icon: Eraser,
     },
     {
       title: "设置",

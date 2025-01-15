@@ -1,11 +1,11 @@
 {
   "LocaleSwitcher": {
-    "cn": "China",
+    "zh": "China",
     "en": "English",
     "label": "Language"
   },
   "app": {
-    "name": "Image AI",
+    "name": "DrawText",
     "textPro": "Pro"
   },
   "login": {
@@ -18,7 +18,7 @@
       "btn": "Submit",
       "btn1": "Need an account? Sign up",
       "btn2": "Forgot pasword?",
-      "info1": "login...",
+      "info1": "signup...",
       "info2": "login successfully !",
       "emailMessage": "Please enter a valid email address!",
       "passwordMessage": "Password must be at least 8 characters long."
@@ -71,6 +71,7 @@
   },
   "home": {
     "navigtion": {
+      "name": "Dashboard",
       "features": "Features",
       "pricing": "Pricing",
       "faqs": "FAQs",
@@ -82,41 +83,22 @@
       "text": "Here are some of the most frequently asked questions about our product."
     },
     "features": {
-      "name": "features",
-      "title": " Unlock Unlimited Possibilities with Pictoria AI",
-      "text": " Our platform offers a wide range of features designed to enhance your image creation experience. From easy-to-use editing tools to powerful AI-powered image generation, we have everything you need to bring your ideas to life."
+      "name": "Features",
+      "title": "Unlock Infinite Possibilities with Creativity",
+      "text": " Our platform offers a variety of features designed to enhance your content creation experience. From intuitive text editing tools to powerful hand-drawn style sketching, we provide everything you need to bring your ideas to life. Whether you're writing articles, designing sketches, or creating visually rich presentations, DrawText meets all your needs, making creative expression more free and intuitive."
     },
     "hero": {
-      "title1": "Try new flux model",
-      "title2": "Transform your photos with the power of AI",
-      "title3": " From LinkedIn headshots to Instagram influencer photos, Pictoria AI&apos;s state-of-the-art technology ensures you always look your best. Create, edit, and generate images effortlessly.",
-      "title4": "Loved by 1k+ customers",
-      "title5": " Crreate Your First AI Model"
+      "title1": "Try a Whole New Way of Creating",
+      "title2": "Unleash Your Creativity with DrawText",
+      "title3": "From text to sketches, our tools bring your ideas to life. Easily edit, draw, and share your creations.",
+      "title4": "Loved by 1000+ Creators",
+      "title5": "Start Your First Creative Project"
     },
-    "price": {
-      "name": "price",
-      "title1": "Choose the plan that fits your needs",
-      "title2": "Choose an offordable plan that is packed with the best features for engaging your audience,createing customer loyalty and driving sales. engaging your",
-      "title3": "Monthly",
-      "title4": "Yearly",
-      "title5": "Most Popular",
-      "title6": "Subscribe",
-      "title7": "What's included"
-    },
+
     "footer": {
-      "title1": "Image AI Inc. All rights reserved.",
+      "title1": " DrawText Inc. All rights reserved.",
       "title2": "Tems of Service",
       "title3": "Privacy Policy"
-    },
-    "review": {
-      "title1": "Testimonials",
-      "title2": "What Our Users Say",
-      "title3": " Discover why thousands are choosing Pictoria AI for effortless,high-quality photo generation, from LinkedIn headshots to vibrant social media content."
-    },
-    "ready": {
-      "title1": "Ready to Transform Your Photos?",
-      "title2": "Join thousands of users who are already creating amazing AI-generated images.",
-      "title3": "  Create Your First AI Model"
     }
   },
   "dashboard": {

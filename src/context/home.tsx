@@ -1,281 +1,174 @@
 import { ImageIcon, Package2, Palette } from "lucide-react";
-import img1 from "@/public/hero-images/Charismatic Young Man with a Warm Smile and Stylish Tousled Hair.jpeg";
-import img2 from "@/public/hero-images/Confident Businesswoman on Turquoise Backdrop.jpeg";
-import img3 from "@/public/hero-images/Confident Woman in Red Outfit.jpeg";
-import img4 from "@/public/hero-images/Confident Woman in Urban Setting.jpeg";
-import img5 from "@/public/hero-images/Futuristic Helmet Portrait.jpeg";
-import img6 from "@/public/hero-images/Futuristic Woman in Armor.jpeg";
-import img7 from "@/public/hero-images/Man in Brown Suit.jpeg";
-import img8 from "@/public/hero-images/Poised Elegance of a Young Professional.jpeg";
-import img9 from "@/public/hero-images/Professional Business Portrait.jpeg";
-import img10 from "@/public/hero-images/Sophisticated Businessman Portrait.jpeg";
-import img11 from "@/public/hero-images/Professional Woman in Navy Blue Suit.jpeg";
-import avatar1 from "@/public/avatars/AutumnTechFocus.jpeg";
-import avatar2 from "@/public/avatars/Casual Creative Professional.jpeg";
-import avatar3 from "@/public/avatars/Golden Hour Contemplation.jpeg";
-import avatar4 from "@/public/avatars/Portrait of a Woman in Rust-Colored Top.jpeg";
-import avatar5 from "@/public/avatars/Radiant Comfort.jpeg";
-import avatar6 from "@/public/avatars/Relaxed Bearded Man with Tattoo at Cozy Cafe.jpeg";
 
 export const faqsList: any = {
   en: [
     {
-      question: "How does Pictoria AI work?",
+      question: "What is Excalidraw and what can it be used for?",
       answer:
-        "Pictoria AI uses advanced machine learning algorithms to analyze and understand your photos. It then generates new images based on your features and the scenarios you choose, creating realistic and personalized results.",
+        "Excalidraw is an open-source, web-based drawing tool that allows users to create hand-drawn style diagrams, sketches, and wireframes. It is commonly used for brainstorming, prototyping, and collaborative design due to its simplicity and ease of use."
     },
     {
-      question: "Is my data safe with Pictoria AI?",
+      question: "How can I integrate Excalidraw into my project?",
       answer:
-        "Yes, we take data privacy very seriously. All uploaded photos and generated images are encrypted and stored securely. We never share your personal data or images with third parties without your explicit consent.",
+        "Excalidraw provides an embeddable component that can be integrated into any web application. You can use its API or npm package to include it in your project, allowing users to create and edit diagrams directly within your application."
     },
     {
-      question: "How many photos do I need to upload for best results?",
+      question: "Is Excalidraw suitable for professional design work?",
       answer:
-        "For optimal results, we recommend uploading at least 10-20 diverse photos of yourself. This helps our AI model better understand your features and expressions, leading to more accurate and realistic generated images.",
+        "While Excalidraw is great for quick sketches and collaborative brainstorming, it may not be suitable for highly detailed or professional design work. It is best used for informal diagrams, wireframes, and early-stage design concepts."
     },
     {
-      question: "Can I use Pictoria AI for commercial purposes?",
+      question: "What is EditorJS and how does it differ from other text editors?",
       answer:
-        "Yes, our Pro and Enterprise plans include commercial usage rights for the images you generate. However, please note that you should always respect copyright and privacy laws when using AI-generated images.",
+        "EditorJS is an open-source block-style text editor that allows users to create rich text content using modular blocks. Unlike traditional WYSIWYG editors, EditorJS provides a clean JSON output, making it ideal for structured content management and modern web applications."
     },
     {
-      question: "How often do you update the AI model?",
+      question: "Can EditorJS be customized to fit specific needs?",
       answer:
-        "We continuously work on improving our AI model. Major updates are typically released quarterly, with minor improvements and optimizations happening more frequently. All users benefit from these updates automatically.",
+        "Yes, EditorJS is highly customizable. You can create custom blocks, plugins, and tools to extend its functionality. Its modular architecture makes it easy to tailor the editor to your specific requirements."
     },
     {
-      question: "What are the differences between the free and paid plans?",
+      question: "Is EditorJS suitable for collaborative editing?",
       answer:
-        "The free plan allows you to generate up to 5 images per day. The Pro plan includes unlimited image generation, higher resolution output, and access to additional features. The Enterprise plan is tailored for businesses and offers custom integrations and dedicated support.",
-    },
+        "EditorJS itself does not natively support real-time collaboration, but it can be integrated with third-party services or libraries (like Firebase or WebSocket) to enable collaborative editing features."
+    }
   ],
-  cn: [
+  zh: [
     {
-      question: "Pictoria AI 是如何工作的？",
+      question: "Excalidraw 是什么？它有哪些用途？",
       answer:
-        "Pictoria AI 使用先进的机器学习算法来分析和理解您的照片。然后，它根据您的特征和您选择的场景生成新的图像，创造出逼真且个性化的结果。",
+        "Excalidraw 是一个开源的、基于网页的绘图工具，允许用户创建手绘风格的图表、草图和线框图。由于其简单易用，它通常用于头脑风暴、原型设计和协作设计。"
     },
     {
-      question: "我的数据在 Pictoria AI 中安全吗？",
+      question: "如何将 Excalidraw 集成到我的项目中？",
       answer:
-        "是的，我们非常重视数据隐私。所有上传的照片和生成的图像都会加密并安全存储。未经您的明确同意，我们绝不会与第三方共享您的个人数据或图像。",
+        "Excalidraw 提供了一个可嵌入的组件，可以集成到任何网页应用中。你可以使用它的 API 或 npm 包将其包含在你的项目中，从而允许用户直接在应用中创建和编辑图表。"
     },
     {
-      question: "为了获得最佳效果，我需要上传多少张照片？",
+      question: "Excalidraw 适合专业设计工作吗？",
       answer:
-        "为了获得最佳效果，我们建议至少上传 10-20 张您的多样化照片。这有助于我们的 AI 模型更好地理解您的特征和表情，从而生成更准确和逼真的图像。",
+        "虽然 Excalidraw 非常适合快速草图和协作头脑风暴，但它可能不适合高度详细或专业的设计工作。它最适合用于非正式的图表、线框图和早期设计概念。"
     },
     {
-      question: "我可以将 Pictoria AI 用于商业用途吗？",
+      question: "EditorJS 是什么？它与其他文本编辑器有何不同？",
       answer:
-        "可以，我们的 Pro 和 Enterprise 计划包含您生成的图像的商业使用权。但请注意，在使用 AI 生成的图像时，您应始终遵守版权和隐私法律。",
+        "EditorJS 是一个开源的块式文本编辑器，允许用户使用模块化块创建富文本内容。与传统的所见即所得编辑器不同，EditorJS 提供干净的 JSON 输出，非常适合结构化内容管理和现代网页应用。"
     },
     {
-      question: "你们多久更新一次 AI 模型？",
+      question: "EditorJS 可以定制以满足特定需求吗？",
       answer:
-        "我们不断改进我们的 AI 模型。重大更新通常每季度发布一次，而较小的改进和优化会更频繁地进行。所有用户都会自动受益于这些更新。",
+        "是的，EditorJS 高度可定制。你可以创建自定义块、插件和工具来扩展其功能。其模块化架构使其易于根据你的特定需求进行定制。"
     },
     {
-      question: "免费计划和付费计划有什么区别？",
+      question: "EditorJS 适合协作编辑吗？",
       answer:
-        "免费计划允许您每天生成最多 5 张图像。Pro 计划包括无限图像生成、更高分辨率的输出以及访问额外功能。Enterprise 计划专为企业设计，提供定制集成和专属支持。",
-    },
-  ],
-};
-
-export const featureList = {
-  en: [
-    {
-      title: "AI-Powered Photos",
-      description:
-        " Instantly transform your photos into high-quality, lifelike images with the power of AI. Whether you need fresh content for social media, professional shots for LinkedIn, or a fun set of images for personal project.",
-      icon: <ImageIcon className="w-6 h-6" strokeWidth={1.5} />,
-    },
-    {
-      title: "Diverse Photo Packs at Your Fingertips",
-      description:
-        "Instantly transform your photos into high-quality, lifelike images with the power of AI. Whether you need fresh content for social media, professional shots for LinkedIn, or a fun set of images for personal project. ",
-      icon: <Package2 className="w-6 h-6" strokeWidth={1.5} />,
-    },
-    {
-      title: "Customizable Photo Generation",
-      description:
-        "Instantly transform your photos into high-quality, lifelike images with the power of AI. Whether you need fresh content for social media, professional shots for LinkedIn, or a fun set of images for personal project.",
-      icon: <Palette className="w-6 h-6" strokeWidth={1.5} />,
-    },
-  ],
-  cn: [
-    {
-      title: "AI 驱动的照片",
-      description:
-        "利用 AI 的力量，立即将您的照片转换为高质量、逼真的图像。无论您是需要社交媒体上的新鲜内容、LinkedIn 上的专业照片，还是个人项目中的一组有趣图像。",
-      icon: <ImageIcon className="w-6 h-6" strokeWidth={1.5} />,
-    },
-    {
-      title: "触手可及的多样化照片包",
-      description:
-        "利用 AI 的力量，立即将您的照片转换为高质量、逼真的图像。无论您是需要社交媒体上的新鲜内容、LinkedIn 上的专业照片，还是个人项目中的一组有趣图像。",
-      icon: <Package2 className="w-6 h-6" strokeWidth={1.5} />,
-    },
-    {
-      title: "可定制的照片生成",
-      description:
-        "利用 AI 的力量，立即将您的照片转换为高质量、逼真的图像。无论您是需要社交媒体上的新鲜内容、LinkedIn 上的专业照片，还是个人项目中的一组有趣图像。",
-      icon: <Palette className="w-6 h-6" strokeWidth={1.5} />,
-    },
-  ],
+        "EditorJS 本身不支持实时协作，但可以与第三方服务或库（如 Firebase 或 WebSocket）集成，以实现协作编辑功能。"
+    }
+  ]
 };
 
 export const avatars = [
   {
     src: "/avatars/AutumnTechFocus.jpeg",
-    fallback: "CN",
+    fallback: "CN"
   },
   {
     src: "/avatars/Casual Creative Professional.jpeg",
-    fallback: "AB",
+    fallback: "AB"
   },
   {
     src: "/avatars/Golden Hour Contemplation.jpeg",
-    fallback: "FG",
+    fallback: "FG"
   },
   {
     src: "/avatars/Portrait of a Woman in Rust-Colored Top.jpeg",
-    fallback: "PW",
+    fallback: "PW"
   },
   {
     src: "/avatars/Radiant Comfort.jpeg",
-    fallback: "RC",
+    fallback: "RC"
   },
   {
     src: "/avatars/Relaxed Bearded Man with Tattoo at Cozy Cafe.jpeg",
-    fallback: "RB",
-  },
+    fallback: "RB"
+  }
 ];
 
-export const Images = [
-  {
-    src: img1,
-    alt: "AI generated image",
-  },
-  {
-    src: img2,
-    alt: "AI generated image",
-  },
-  {
-    src: img3,
-    alt: "AI generated image",
-  },
-  {
-    src: img4,
-    alt: "AI generated image",
-  },
-  {
-    src: img5,
-    alt: "AI generated image",
-  },
-  {
-    src: img6,
-    alt: "AI generated image",
-  },
-  {
-    src: img7,
-    alt: "AI generated image",
-  },
-  {
-    src: img8,
-    alt: "AI generated image",
-  },
-  {
-    src: img9,
-    alt: "AI generated image",
-  },
-  {
-    src: img10,
-    alt: "AI generated image",
-  },
-  {
-    src: img11,
-    alt: "AI generated image",
-  },
-];
+import { PenIcon, TextIcon, LayoutIcon, ShareIcon, CodeIcon, UsersIcon } from "lucide-react"; // 假设使用 Lucide React 图标
 
-export const reviewsList = {
+export const featureList = {
   en: [
     {
-      name: "Jack Smith",
-      username: "@jacksmith",
-      body: "The dating profile photos I received transformed my online presence and boosted my matches significantly. Truly a game changer!",
-      img: avatar1,
+      title: "Rich Text Editing",
+      description:
+        "Create and edit content with ease using EditorJS's modular block system. Supports paragraphs, headings, lists, images, quotes, and more, all with clean JSON output for easy integration.",
+      icon: <TextIcon className="w-6 h-6" strokeWidth={1.5} />
     },
     {
-      name: "Jill Smith",
-      username: "@jillsmith",
-      body: "I was completely blown away by the results. This service exceeded all my expectations. Absolutely amazing!",
-      img: avatar2,
+      title: "Hand-Drawn Sketching",
+      description:
+        "Bring your ideas to life with Excalidraw's intuitive hand-drawn style diagrams. Perfect for wireframes, flowcharts, and brainstorming sessions.",
+      icon: <PenIcon className="w-6 h-6" strokeWidth={1.5} />
     },
     {
-      name: "John Doe",
-      username: "@johndoe",
-      body: "Using Photo AI for my LinkedIn profile was a fantastic decision. The quality was outstanding, and I got multiple job offers!",
-      img: avatar3,
+      title: "Seamless Integration",
+      description:
+        "Combine text and drawings effortlessly. Drag and drop sketches into your text editor, and adjust layouts for a polished, professional look.",
+      icon: <LayoutIcon className="w-6 h-6" strokeWidth={1.5} />
     },
     {
-      name: "Jane Doe",
-      username: "@janedoe",
-      body: "Words can't express how thrilled I am with the results. This service is simply phenomenal. I love it!",
-      img: avatar4,
+      title: "Real-Time Collaboration",
+      description:
+        "Work together with your team in real-time. Edit documents, sketch ideas, and leave comments—all synchronized instantly.",
+      icon: <UsersIcon className="w-6 h-6" strokeWidth={1.5} />
     },
     {
-      name: "Jenny Mandell",
-      username: "@jennymandell",
-      body: "I can't find the words to describe how impressed I am. This service is truly remarkable. I love it!",
-      img: avatar5,
+      title: "Export & Share",
+      description:
+        "Export your creations as PDF, Markdown, or JSON. Generate shareable links to collaborate or showcase your work with others.",
+      icon: <ShareIcon className="w-6 h-6" strokeWidth={1.5} />
     },
     {
-      name: "James Cameron",
-      username: "@jamescameron",
-      body: "I am genuinely amazed by the quality of the photos. This service is a game changer for anyone looking to enhance their profile!",
-      img: avatar6,
-    },
+      title: "Customizable & Extendable",
+      description:
+        "Tailor DrawText Studio to your needs with custom plugins, themes, and tools. Developer-friendly APIs make integration and extension a breeze.",
+      icon: <CodeIcon className="w-6 h-6" strokeWidth={1.5} />
+    }
   ],
-  cn: [
+  zh: [
     {
-      name: "杰克·史密斯",
-      username: "@jacksmith",
-      body: "我收到的约会资料照片彻底改变了我的在线形象，并显著增加了我的匹配率。这真是一个改变游戏规则的服务！",
-      img: avatar1,
+      title: "富文本编辑",
+      description:
+        "使用 EditorJS 的模块化块系统轻松创建和编辑内容。支持段落、标题、列表、图片、引用等，并提供干净的 JSON 输出，便于集成。",
+      icon: <TextIcon className="w-6 h-6" strokeWidth={1.5} />
     },
     {
-      name: "吉尔·史密斯",
-      username: "@jillsmith",
-      body: "我对结果感到非常震撼。这项服务超出了我的所有期望。简直太棒了！",
-      img: avatar2,
+      title: "手绘风格绘图",
+      description:
+        "使用 Excalidraw 的直观手绘风格图表，将您的想法变为现实。非常适合线框图、流程图和头脑风暴会议。",
+      icon: <PenIcon className="w-6 h-6" strokeWidth={1.5} />
     },
     {
-      name: "约翰·多伊",
-      username: "@johndoe",
-      body: "使用 Photo AI 制作我的 LinkedIn 个人资料是一个极好的决定。照片质量非常出色，我还收到了多个工作机会！",
-      img: avatar3,
+      title: "无缝整合",
+      description: "轻松结合文本和绘图。将草图拖放到文本编辑器中，并调整布局以获得精美的专业外观。",
+      icon: <LayoutIcon className="w-6 h-6" strokeWidth={1.5} />
     },
     {
-      name: "简·多伊",
-      username: "@janedoe",
-      body: "我无法用语言表达我对结果的兴奋之情。这项服务简直太出色了。我非常喜欢！",
-      img: avatar4,
+      title: "实时协作",
+      description: "与团队实时协作。编辑文档、绘制草图并留下评论——所有更改都会即时同步。",
+      icon: <UsersIcon className="w-6 h-6" strokeWidth={1.5} />
     },
     {
-      name: "珍妮·曼德尔",
-      username: "@jennymandell",
-      body: "我找不到合适的词来形容我的印象。这项服务真的很了不起。我非常喜欢！",
-      img: avatar5,
+      title: "导出与分享",
+      description:
+        "将您的创作导出为 PDF、Markdown 或 JSON。生成可分享的链接，与他人协作或展示您的作品。",
+      icon: <ShareIcon className="w-6 h-6" strokeWidth={1.5} />
     },
     {
-      name: "詹姆斯·卡梅隆",
-      username: "@jamescameron",
-      body: "我对照片的质量感到非常惊讶。对于任何想要提升个人资料的人来说，这项服务都是一个改变游戏规则的存在！",
-      img: avatar6,
-    },
-  ],
+      title: "可定制与可扩展",
+      description:
+        "通过自定义插件、主题和工具，根据您的需求定制 DrawText Studio。开发者友好的 API 使集成和扩展变得轻而易举。",
+      icon: <CodeIcon className="w-6 h-6" strokeWidth={1.5} />
+    }
+  ]
 };

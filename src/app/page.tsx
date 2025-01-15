@@ -13,7 +13,7 @@ export default async function HomePage() {
       <Hero />
       <Features />
       <Faqs />
-      <Ready />
+
       <Footer />
     </main>
   );

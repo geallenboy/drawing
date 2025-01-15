@@ -7,7 +7,7 @@ import {
   FormField,
   FormItem,
   FormLabel,
-  FormMessage,
+  FormMessage
 } from "@/components/ui/form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -18,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { changePasswordAction } from "@/app/actions/auth-actions";
-import { redirect, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 const passwordValidationRegex = new RegExp(
   "^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{8,})"
@@ -34,25 +34,25 @@ export const ChangePassword = () => {
       password: z
         .string()
         .min(8, {
-          message: changePasswordT("passwordMessage"),
+          message: changePasswordT("passwordMessage")
         })
         .regex(passwordValidationRegex, {
-          message: changePasswordT("passwordRegex"),
+          message: changePasswordT("passwordRegex")
         }),
       confirmPassword: z.string({
-        required_error: changePasswordT("passwordConfirmPassword"),
-      }),
+        required_error: changePasswordT("passwordConfirmPassword")
+      })
     })
     .refine((data) => data.password === data.confirmPassword, {
       message: changePasswordT("passwordRefine"),
-      path: ["confirmPassword"],
+      path: ["confirmPassword"]
     });
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       password: "",
-      confirmPassword: "",
-    },
+      confirmPassword: ""
+    }
   });
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     toast.loading(changePasswordT("infoLoading"), { id: toastId });
@@ -77,12 +77,8 @@ export const ChangePassword = () => {
   return (
     <div className={cn("grid gap-6")}>
       <div className="flex flex-col space-y-2 text-center">
-        <h1 className="text-2xl font-semibold tracking-tight">
-          {changePasswordT("name")}
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          {changePasswordT("desc")}
-        </p>
+        <h1 className="text-2xl font-semibold tracking-tight">{changePasswordT("name")}</h1>
+        <p className="text-sm text-muted-foreground">{changePasswordT("desc")}</p>
       </div>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -95,9 +91,7 @@ export const ChangePassword = () => {
                 <FormControl>
                   <Input type={"password"} {...field} />
                 </FormControl>
-                <FormDescription>
-                  {changePasswordT("passwordDesc")}
-                </FormDescription>
+                <FormDescription>{changePasswordT("passwordDesc")}</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -111,22 +105,16 @@ export const ChangePassword = () => {
                 <FormControl>
                   <Input type={"password"} {...field} />
                 </FormControl>
-                <FormDescription>
-                  {changePasswordT("confirmPasswordDesc")}
-                </FormDescription>
+                <FormDescription>{changePasswordT("confirmPasswordDesc")}</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
           <Button type="submit" className="w-full p-4">
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {loading
-              ? changePasswordT("loading1")
-              : changePasswordT("loading2")}
+            {loading ? changePasswordT("loading1") : changePasswordT("loading2")}
           </Button>
-          <div className="text-center text-sm text-muted-foreground">
-            {changePasswordT("info")}
-          </div>
+          <div className="text-center text-sm text-muted-foreground">{changePasswordT("info")}</div>
         </form>
       </Form>
     </div>

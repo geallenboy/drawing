@@ -23,9 +23,6 @@ export default async function RootLayout({
 
   return (
     <html lang={locale}>
-      {/* <head>
-        <link rel="icon" href="./logo.svg" />
-      </head> */}
       <body className={`${MyAppFont.className} font-sans`}>
         <NextIntlClientProvider messages={messages}>
           {children}

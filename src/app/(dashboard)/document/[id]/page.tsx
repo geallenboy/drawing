@@ -15,10 +15,6 @@ const DocumentWorkspace = () => {
   const [triggerSave, setTriggerSave] = useState(false);
   const [fileData, setFileData] = useState<any>();
 
-  useEffect(() => {
-    id && getFileData();
-  }, [id]);
-
   const getFileData = async () => {
     const { data, success } = await getByIdFileAction(id);
 
@@ -29,6 +25,10 @@ const DocumentWorkspace = () => {
       setFileData(null);
     }
   };
+  useEffect(() => {
+    id && getFileData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
   const onSave = async () => {
     setTriggerSave(!triggerSave);

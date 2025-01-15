@@ -2,8 +2,6 @@
 import React, { useEffect, useRef } from "react";
 import EditorJS from "@editorjs/editorjs";
 import Header from "@editorjs/header";
-//@ts-ignore
-// import Checklist from "@editorjs/checklist";
 import Paragraph from "@editorjs/paragraph";
 import Warning from "@editorjs/warning";
 import List from "@editorjs/list";
@@ -26,23 +24,21 @@ const Editor = ({
 }) => {
   const editorRef = useRef<EditorJS>();
   useEffect(() => {
-    if (fileData && !editorRef.current) {
-      initEditor();
-    }
+    const init = async () => {
+      if (fileData && !editorRef.current) {
+        initEditor();
+      }
+    };
+    init();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fileData]);
 
-  useEffect(() => {
-    if (editorRef.current) {
-      onSaveDocument();
-    }
-  }, [triggerSave]);
-
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const onSaveDocument = async () => {
     if (editorRef.current) {
       try {
-        console.log(fileData, 11);
         const outputData = await editorRef.current.save();
-        console.log("outputData:", outputData);
+
         const { success } = await updateFileAction({
           ...fileData,
           name,
@@ -58,6 +54,11 @@ const Editor = ({
       }
     }
   };
+  useEffect(() => {
+    if (editorRef.current) {
+      onSaveDocument();
+    }
+  }, [onSaveDocument, triggerSave]);
 
   const initEditor = () => {
     const editor = new EditorJS({
@@ -72,10 +73,6 @@ const Editor = ({
             defaultLevel: 2 // 默认标题级别
           }
         },
-        // checklist: {
-        //   class: Checklist,
-        //   inlineToolbar: true
-        // },
         paragraph: {
           class: Paragraph as any,
           inlineToolbar: true
@@ -109,15 +106,6 @@ const Editor = ({
             captionPlaceholder: "Quote's author"
           }
         },
-        // embed: {
-        //   class: Embed,
-        //   config: {
-        //     services: {
-        //       youtube: true,
-        //       coub: true
-        //     }
-        //   }
-        // },
         table: {
           class: Table as any,
           inlineToolbar: true,
@@ -126,10 +114,6 @@ const Editor = ({
             cols: 3
           }
         },
-        // marker: {
-        //   class: Marker,
-        //   shortcut: "CMD+SHIFT+M"
-        // },
         inlineCode: {
           class: InlineCode,
           shortcut: "CMD+SHIFT+I"

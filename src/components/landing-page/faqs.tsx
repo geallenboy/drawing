@@ -2,34 +2,26 @@ import React from "react";
 import AnimatedGradientText from "@/components/ui/animated-gradient-text";
 import { cn } from "@/lib/utils";
 import { faqsList } from "@/context/home";
-import { getI18n } from "@/context";
+import { useI18n } from "@/context";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
-  AccordionTrigger,
+  AccordionTrigger
 } from "@/components/ui/accordion";
 import { useTranslations } from "next-intl";
 
-const Question = ({
-  question,
-  answer,
-}: {
-  question: string;
-  answer: string;
-}) => {
+const Question = ({ question, answer }: { question: string; answer: string }) => {
   return (
     <AccordionItem value={question}>
       <AccordionTrigger className="text-left">{question}</AccordionTrigger>
-      <AccordionContent className="text-muted-foreground">
-        {answer}
-      </AccordionContent>
+      <AccordionContent className="text-muted-foreground">{answer}</AccordionContent>
     </AccordionItem>
   );
 };
 
 const Faqs = () => {
-  const faqsData = getI18n(faqsList);
+  const faqsData = useI18n(faqsList);
   const faqsT = useTranslations("home.faqs");
   return (
     <section
@@ -48,11 +40,7 @@ const Faqs = () => {
       </AnimatedGradientText>
       <h2 className="subHeading mt-4"> {faqsT("title")}</h2>
       <p className="subText mt-4 text-center">{faqsT("text")}</p>
-      <Accordion
-        type="single"
-        collapsible
-        className="w-full max-w-4xl mx-auto mt-16"
-      >
+      <Accordion type="single" collapsible className="w-full max-w-4xl mx-auto mt-16">
         {faqsData.map((faq: any) => {
           return <Question key={faq.question} {...faq} />;
         })}

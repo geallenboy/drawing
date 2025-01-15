@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { updateDrawingAction } from "@/app/actions/drawing-action";
 import { toast } from "sonner";
@@ -19,26 +19,25 @@ const Canvas = ({
   const [excalidrawDate, setExcalidrawDate] = useState<any>();
 
   useEffect(() => {
-    saveDrawingData();
-  }, [triggerSave]);
-
-  const saveDrawingData = async () => {
-    try {
-      console.log(excalidrawDate, 112);
-      if (excalidrawDate) {
-        const { success } = await updateDrawingAction({
-          ...drawingData,
-          name,
-          drawing_data: excalidrawDate
-        });
-        if (success) {
-          toast.success("数据更新成功!");
-        } else {
-          toast.error("数据更新失败!");
+    const saveDrawingData = async () => {
+      try {
+        if (excalidrawDate) {
+          const { success } = await updateDrawingAction({
+            ...drawingData,
+            name,
+            drawing_data: excalidrawDate
+          });
+          if (success) {
+            toast.success("数据更新成功!");
+          } else {
+            toast.error("数据更新失败!");
+          }
         }
-      }
-    } catch (error) {}
-  };
+      } catch (error) {}
+    };
+    saveDrawingData();
+  }, [drawingData, excalidrawDate, name, triggerSave]);
+
   return (
     <div style={{ height: "100%" }}>
       <Excalidraw

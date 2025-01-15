@@ -17,6 +17,7 @@ const DrawingWorkspace = () => {
   console.log(id);
   useEffect(() => {
     id && getDrawingData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const getDrawingData = async () => {

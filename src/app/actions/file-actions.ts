@@ -107,7 +107,6 @@ export const addFileAction = async (data: addFileProps): Promise<ActionResponse>
         name: data.name || "file name",
         file_data: data.file_data || "",
     }]).select()
-    console.log("dbData:", dbData, dbError)
     if (dbError) {
         return {
             error: dbError.message,
@@ -137,7 +136,6 @@ export const updateFileAction = async (data: updateFileProps): Promise<ActionRes
         ...data
     }]).eq("id", data.id).eq('user_id', user.id);
 
-    console.log("dbData:", dbData, "dbError:", dbError)
 
     if (dbError) {
         return {

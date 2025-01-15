@@ -76,7 +76,7 @@ export const delDrawingAction = async (id: number): Promise<ActionResponse> => {
         }
     }
     const { data, error } = await supabase.from("drawing").delete().eq("id", id).eq('user_id', user.id);
-    console.log(data, error)
+
     if (error) {
         return {
             error: error.message,
@@ -107,7 +107,7 @@ export const addDrawingAction = async (data: addDrawingProps): Promise<ActionRes
         name: data.name || "drawing name",
         drawing_data: data.drawing_data || "",
     }]).select()
-    console.log("dbData:", dbData, dbError)
+
     if (dbError) {
         return {
             error: dbError.message,
@@ -133,12 +133,11 @@ export const updateDrawingAction = async (data: updateDrawingProps): Promise<Act
             data: null
         }
     }
-    console.log(data, '++>')
+
     const { data: dbData, error: dbError } = await supabase.from('drawing').update([{
         ...data
     }]).eq("id", data.id).eq('user_id', user.id);
 
-    console.log("dbData:", dbData, "dbError:", dbError)
 
     if (dbError) {
         return {

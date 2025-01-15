@@ -1,10 +1,10 @@
 {
   "name": "draw-text",
-  "version": "0.1.0",
-  "description": "Next.js Nextra docs starter",
+  "version": "1.0.0",
+  "description": "一个开源的文本与绘图创作工具",
   "author": "gegarron <gejialun88@gmail.com>",
   "license": "MIT",
-  "homepage": "https://github.com",
+  "homepage": "https://www.gegarron.com",
   "scripts": {
     "dev": "next dev ",
     "build": "next build",

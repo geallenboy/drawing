@@ -4,6 +4,11 @@
     "en": "英文",
     "label": "语言"
   },
+  "themeConfig": {
+    "light": "浅色",
+    "dark": "深色",
+    "system": "系统"
+  },
   "app": {
     "name": "DrawText",
     "textPro": "专业版"
@@ -18,7 +23,7 @@
       "btn": "提交",
       "btn1": "需要账户？注册",
       "btn2": "忘记密码？",
-      "info1": "正在注册...",
+      "info1": "正在登录...",
       "info2": "登录成功！",
       "emailMessage": "请输入有效的邮箱地址！",
       "passwordMessage": "密码长度必须至少为 8 个字符。"
@@ -75,7 +80,7 @@
       "features": "功能",
       "pricing": "定价",
       "faqs": "常见问题",
-      "signup": "注册"
+      "signup": "登录"
     },
     "faqs": {
       "name": "常见问题",

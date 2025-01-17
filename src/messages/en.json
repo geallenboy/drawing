@@ -4,6 +4,11 @@
     "en": "English",
     "label": "Language"
   },
+  "themeConfig": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
   "app": {
     "name": "DrawText",
     "textPro": "Pro"
@@ -18,7 +23,7 @@
       "btn": "Submit",
       "btn1": "Need an account? Sign up",
       "btn2": "Forgot pasword?",
-      "info1": "signup...",
+      "info1": "Login...",
       "info2": "login successfully !",
       "emailMessage": "Please enter a valid email address!",
       "passwordMessage": "Password must be at least 8 characters long."
@@ -75,7 +80,7 @@
       "features": "Features",
       "pricing": "Pricing",
       "faqs": "FAQs",
-      "signup": "Sign up"
+      "signup": "Login"
     },
     "faqs": {
       "name": "FAQs",

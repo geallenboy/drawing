@@ -36,7 +36,8 @@ const Canvas = ({
       } catch (error) {}
     };
     saveDrawingData();
-  }, [drawingData, excalidrawDate, name, triggerSave]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [name, triggerSave]);
 
   return (
     <div style={{ height: "100%" }}>

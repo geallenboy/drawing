@@ -6,7 +6,7 @@ import {
   FormField,
   FormItem,
   FormLabel,
-  FormMessage,
+  FormMessage
 } from "@/components/ui/form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -32,28 +32,28 @@ export const SignUpForm = () => {
   const formSchema = z
     .object({
       fullName: z.string().min(3, {
-        message: signUpFormT("fullNameMessage"),
+        message: signUpFormT("fullNameMessage")
       }),
       email: z.string().email({
-        message: signUpFormT("emailMessage"),
+        message: signUpFormT("emailMessage")
       }),
       password: z
         .string({
-          required_error: signUpFormT("passwordString"),
+          required_error: signUpFormT("passwordString")
         })
         .min(8, {
-          message: signUpFormT("passwordMin"),
+          message: signUpFormT("passwordMin")
         })
         .regex(passwordValidationRegex, {
-          message: signUpFormT("passwordRegex"),
+          message: signUpFormT("passwordRegex")
         }),
       confirmPassword: z.string({
-        required_error: signUpFormT("confirmPasswordInfo"),
-      }),
+        required_error: signUpFormT("confirmPasswordInfo")
+      })
     })
     .refine((data) => data.password === data.confirmPassword, {
       message: signUpFormT("passwordRefine"),
-      path: ["confirmPassword"],
+      path: ["confirmPassword"]
     });
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -62,8 +62,8 @@ export const SignUpForm = () => {
       email: "",
       password: "",
       fullName: "",
-      confirmPassword: "",
-    },
+      confirmPassword: ""
+    }
   });
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setLoading(true);
@@ -85,9 +85,7 @@ export const SignUpForm = () => {
   return (
     <div className="space-y-6">
       <div className="flex flex-col space-y-2 text-center">
-        <h1 className="text-2xl font-semibold tracking-tight">
-          {signUpFormT("name")}
-        </h1>
+        <h1 className="text-2xl font-semibold tracking-tight">{signUpFormT("name")}</h1>
         <p className="text-sm text-gray-400">{signUpFormT("title1")}</p>
       </div>
       <div>
@@ -101,10 +99,7 @@ export const SignUpForm = () => {
                   <FormItem>
                     <FormLabel>{signUpFormT("fullName")}</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder={signUpFormT("fullNameInfo")}
-                        {...field}
-                      />
+                      <Input placeholder={signUpFormT("fullNameInfo")} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -117,7 +112,7 @@ export const SignUpForm = () => {
                   <FormItem>
                     <FormLabel>{signUpFormT("email")}</FormLabel>
                     <FormControl>
-                      <Input placeholder="name@ecample.com" {...field} />
+                      <Input placeholder="name@example.com" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -130,11 +125,7 @@ export const SignUpForm = () => {
                   <FormItem>
                     <FormLabel>{signUpFormT("password")}</FormLabel>
                     <FormControl>
-                      <Input
-                        type="password"
-                        placeholder={signUpFormT("passwordInfo")}
-                        {...field}
-                      />
+                      <Input type="password" placeholder={signUpFormT("passwordInfo")} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -173,17 +164,11 @@ export const SignUpForm = () => {
         </div>
         <p className="px-8 text-center text-sm text-muted-foreground">
           {signUpFormT("btn3")}
-          <Link
-            href={"#"}
-            className="underline underline-offset-4 hover:text-primary"
-          >
+          <Link href={"#"} className="underline underline-offset-4 hover:text-primary">
             {signUpFormT("btn4")}
           </Link>
           {signUpFormT("btn5")}
-          <Link
-            href={"#"}
-            className="underline underline-offset-4 hover:text-primary"
-          >
+          <Link href={"#"} className="underline underline-offset-4 hover:text-primary">
             {signUpFormT("btn6")}
           </Link>
         </p>

@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 import EditorJS from "@editorjs/editorjs";
 import Header from "@editorjs/header";
 import Paragraph from "@editorjs/paragraph";
@@ -9,7 +9,6 @@ import Code from "@editorjs/code";
 import Quote from "@editorjs/quote";
 import Table from "@editorjs/table";
 import InlineCode from "@editorjs/inline-code";
-
 import { toast } from "sonner";
 import { updateFileAction } from "@/app/actions/file-actions";
 
@@ -23,44 +22,7 @@ const Editor = ({
   name: string;
 }) => {
   const editorRef = useRef<EditorJS>();
-  useEffect(() => {
-    const init = async () => {
-      if (fileData && !editorRef.current) {
-        initEditor();
-      }
-    };
-    init();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fileData]);
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const onSaveDocument = async () => {
-    if (editorRef.current) {
-      try {
-        const outputData = await editorRef.current.save();
-
-        const { success } = await updateFileAction({
-          ...fileData,
-          name,
-          file_data: outputData as any
-        });
-        if (success) {
-          toast.success("文档更新成功!");
-        } else {
-          toast.error("文档更新失败!");
-        }
-      } catch (error) {
-        toast.error("文档更新失败!");
-      }
-    }
-  };
-  useEffect(() => {
-    if (editorRef.current) {
-      onSaveDocument();
-    }
-  }, [onSaveDocument, triggerSave]);
-
-  const initEditor = () => {
+  const initEditor = useCallback(() => {
     const editor = new EditorJS({
       holder: "editorjs",
       tools: {
@@ -164,7 +126,42 @@ const Editor = ({
     });
 
     editorRef.current = editor;
-  };
+  }, [fileData]);
+  useEffect(() => {
+    if (fileData && !editorRef.current) {
+      initEditor();
+    }
+  }, [fileData, initEditor]);
+
+  const onSaveDocument = useCallback(async () => {
+    console.log("editorRef.current:", editorRef.current, editorRef);
+    if (editorRef.current) {
+      try {
+        const outputData = await editorRef.current.save();
+
+        const { success } = await updateFileAction({
+          ...fileData,
+          name,
+          file_data: outputData as any
+        });
+        console.log(success, "success");
+        if (success) {
+          toast.success("文档更新成功!");
+        } else {
+          toast.error("文档更新失败!");
+        }
+      } catch (error) {
+        toast.error("文档更新失败!");
+      }
+    }
+  }, [fileData, name]);
+
+  useEffect(() => {
+    if (editorRef.current) {
+      onSaveDocument();
+    }
+  }, [onSaveDocument, triggerSave]);
+
   return (
     <div className="w-full pl-10">
       <div className="w-full" id="editorjs"></div>

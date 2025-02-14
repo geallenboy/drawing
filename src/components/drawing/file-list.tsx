@@ -14,16 +14,22 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from "../ui/dropdown-menu";
+import dayjs from "dayjs";
 import { Archive, DeleteIcon, MoreHorizontal } from "lucide-react";
 import { Database } from "@datatypes.types";
 import { useRouter } from "next/navigation";
 import { delDrawingAction, getAllDrawingAction } from "@/app/actions/drawing-action";
 
 type rowFileProps = Database["public"]["Tables"]["drawing"]["Row"];
+type FileListProps = {
+  searchQuery: string;
+};
 
-const FileList = () => {
+const FileList = ({ searchQuery }: FileListProps) => {
   const router = useRouter();
-  const [drawingList, setDrawingList] = useState([]);
+  const [fileList, setFileList] = useState<rowFileProps[]>([]);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const pageSize = 4; // 每页显示 10 条数据
   useEffect(() => {
     getAllData();
   }, []);
@@ -31,7 +37,7 @@ const FileList = () => {
     const { success, data, error } = await getAllDrawingAction();
     console.log(data);
     if (success) {
-      setDrawingList(data);
+      setFileList(data);
     }
   };
   const updateFile = (id: number) => {
@@ -44,6 +50,28 @@ const FileList = () => {
     if (success) {
       getAllData();
     }
+  };
+
+  // 根据搜索条件过滤文件（不区分大小写）
+  const filteredFileList = fileList.filter(
+    (file) => file.name && file.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+  // 分页逻辑
+  const totalItems = filteredFileList.length;
+  const totalPages = Math.ceil(totalItems / pageSize);
+  const startIndex = (currentPage - 1) * pageSize;
+  const currentData = filteredFileList.slice(startIndex, startIndex + pageSize);
+
+  // 当搜索条件或数据总条数变化时重置当前页码
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, totalItems]);
+  const goToPreviousPage = () => {
+    setCurrentPage((prev) => Math.max(prev - 1, 1));
+  };
+
+  const goToNextPage = () => {
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
   };
   return (
     <div>
@@ -58,11 +86,11 @@ const FileList = () => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {drawingList.map((drawing: rowFileProps, index: number) => (
+          {currentData.map((drawing: rowFileProps, index: number) => (
             <TableRow key={index}>
               <TableCell>{drawing.name}</TableCell>
-              <TableCell>{drawing.created_at}</TableCell>
-              <TableCell>{drawing.update_at}</TableCell>
+              <TableCell>{dayjs(drawing.created_at).format("YYYY-MM-DD HH:mm:ss")}</TableCell>
+              <TableCell>{dayjs(drawing.update_at).format("YYYY-MM-DD HH:mm:ss")}</TableCell>
               <TableCell>{drawing.id}</TableCell>
               <TableCell>
                 <DropdownMenu>
@@ -94,6 +122,25 @@ const FileList = () => {
           ))}
         </TableBody>
       </Table>
+      <div className="flex justify-between items-center mt-4">
+        <button
+          onClick={goToPreviousPage}
+          disabled={currentPage === 1}
+          className="px-2 py-1 text-sm bg-gray-300 text-gray-700 rounded disabled:opacity-50"
+        >
+          上一页
+        </button>
+        <span className="text-sm font-serif">
+          第 {currentPage} 页 / 共 {totalPages} 页
+        </span>
+        <button
+          onClick={goToNextPage}
+          disabled={currentPage === totalPages || totalPages === 0}
+          className="px-2 py-1 text-sm bg-gray-300 text-gray-700 rounded disabled:opacity-50"
+        >
+          下一页
+        </button>
+      </div>
     </div>
   );
 };

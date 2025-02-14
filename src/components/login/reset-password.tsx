@@ -6,7 +6,7 @@ import {
   FormField,
   FormItem,
   FormLabel,
-  FormMessage,
+  FormMessage
 } from "@/components/ui/form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -26,24 +26,24 @@ export const ResetPassword = () => {
   const resetPasswordT = useTranslations("login.resetPassword");
   const formSchema = z.object({
     email: z.string().email({
-      message: resetPasswordT("emailMessage"),
+      message: resetPasswordT("emailMessage")
     }),
     password: z.string().min(8, {
-      message: resetPasswordT("passwordMessage"),
-    }),
+      message: resetPasswordT("passwordMessage")
+    })
   });
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       email: "",
-      password: "",
-    },
+      password: ""
+    }
   });
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     toast.loading(resetPasswordT("infoLoading"), { id: toastId });
     try {
       const { success, error } = await resetPasswordAction({
-        email: values?.email || "",
+        email: values?.email || ""
       });
       if (!success) {
         toast.error(error, { id: toastId });
@@ -52,16 +52,14 @@ export const ResetPassword = () => {
       }
     } catch (error: any) {
       toast.error(error?.message || resetPasswordT("infoError"), {
-        id: toastId,
+        id: toastId
       });
     }
   };
   return (
     <div className="space-y-6">
       <div className="flex flex-col space-y-2 text-center">
-        <h1 className="text-2xl font-semibold tracking-tight">
-          {resetPasswordT("name")}
-        </h1>
+        <h1 className="text-2xl font-semibold tracking-tight">{resetPasswordT("name")}</h1>
         <p className="text-sm text-gray-400">{resetPasswordT("title1")}</p>
       </div>
 
@@ -75,7 +73,7 @@ export const ResetPassword = () => {
                 <FormItem>
                   <FormLabel>{resetPasswordT("email")}</FormLabel>
                   <FormControl>
-                    <Input placeholder="name@ecample.com" {...field} />
+                    <Input placeholder="name@example.com" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

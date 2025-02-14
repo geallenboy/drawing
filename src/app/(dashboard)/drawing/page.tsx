@@ -1,8 +1,7 @@
 import React from "react";
-import FileList from "@/components/drawing/file-list";
-import Header from "@/components/drawing/header";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import CanvasContent from "@/components/drawing/canvas-content";
 
 const DrawingPage = async () => {
   const supabase = await createClient();
@@ -13,12 +12,7 @@ const DrawingPage = async () => {
     return redirect("/login");
   }
 
-  return (
-    <div className="container mx-auto space-y-4">
-      <Header />
-      <FileList />
-    </div>
-  );
+  return <CanvasContent />;
 };
 
 export default DrawingPage;

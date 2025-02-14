@@ -6,7 +6,7 @@ import {
   FormField,
   FormItem,
   FormLabel,
-  FormMessage,
+  FormMessage
 } from "@/components/ui/form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -20,6 +20,8 @@ import { redirect } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
+import { GoogleSignin } from "./google-signin";
+import { GithubSignin } from "./github-signin";
 
 export const LoginForm = () => {
   const [loading, setLoading] = useState(false);
@@ -27,18 +29,18 @@ export const LoginForm = () => {
   const loginFormT = useTranslations("login.loginForm");
   const formSchema = z.object({
     email: z.string().email({
-      message: loginFormT("emailMessage"),
+      message: loginFormT("emailMessage")
     }),
     password: z.string().min(8, {
-      message: loginFormT("passwordMessage"),
-    }),
+      message: loginFormT("passwordMessage")
+    })
   });
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       email: "",
-      password: "",
-    },
+      password: ""
+    }
   });
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setLoading(true);
@@ -59,9 +61,7 @@ export const LoginForm = () => {
   return (
     <div className="space-y-6">
       <div className="flex flex-col space-y-2 text-center">
-        <h1 className="text-2xl font-semibold tracking-tight">
-          {loginFormT("name")}
-        </h1>
+        <h1 className="text-2xl font-semibold tracking-tight">{loginFormT("name")}</h1>
         <p className="text-sm text-gray-400">{loginFormT("title1")}</p>
       </div>
       <div>
@@ -75,7 +75,7 @@ export const LoginForm = () => {
                   <FormItem>
                     <FormLabel> {loginFormT("email")}</FormLabel>
                     <FormControl>
-                      <Input placeholder="name@ecample.com" {...field} />
+                      <Input placeholder="name@example.com" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -88,11 +88,7 @@ export const LoginForm = () => {
                   <FormItem>
                     <FormLabel>{loginFormT("password")}</FormLabel>
                     <FormControl>
-                      <Input
-                        type="password"
-                        placeholder={loginFormT("passwordInfo")}
-                        {...field}
-                      />
+                      <Input type="password" placeholder={loginFormT("passwordInfo")} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -102,6 +98,10 @@ export const LoginForm = () => {
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {loginFormT("btn")}
               </Button>
+              <div className="flex gap-4">
+                <GoogleSignin />
+                <GithubSignin />
+              </div>
             </form>
           </Form>
         </div>

@@ -1,8 +1,7 @@
 import React from "react";
-import FileList from "@/components/document/file-list";
-import Header from "@/components/document/header";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import DocumentContent from "@/components/document/document-content";
 
 const DocumentPage = async () => {
   const supabase = await createClient();
@@ -13,12 +12,7 @@ const DocumentPage = async () => {
     return redirect("/login");
   }
 
-  return (
-    <div className="container mx-auto space-y-4">
-      <Header />
-      <FileList />
-    </div>
-  );
+  return <DocumentContent />;
 };
 
 export default DocumentPage;

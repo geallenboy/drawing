@@ -29,7 +29,7 @@ const FileList = ({ searchQuery }: FileListProps) => {
   const router = useRouter();
   const [fileList, setFileList] = useState<rowFileProps[]>([]);
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const pageSize = 4; // 每页显示 10 条数据
+  const pageSize = 10; // 每页显示 10 条数据
   useEffect(() => {
     getAllData();
   }, []);

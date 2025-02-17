@@ -30,7 +30,6 @@ DrawText 是一个开源的创作工具，旨在为用户提供一个简单、�
 - **富文本编辑**：基于 EditorJS，支持模块化内容块。
 - **手绘风格绘图**：集成 Excalidraw，支持直观的绘图功能。
 - **无缝整合**：文本与绘图完美结合，支持拖拽布局调整。
-- **实时协作**：多人同时编辑，实时同步更改。
 - **导出与分享**：支持多种格式导出，方便分享与协作。
 - **可定制与可扩展**：提供插件和 API，满足个性化需求。
 
@@ -92,10 +91,10 @@ DrawText 是一个开源的创作工具，旨在为用户提供一个简单、�
 
 ## 技术栈
 
-- **前端**：React+Nextjs + TypeScript
+- **前端**：React + Nextjs + TypeScript
 - **文本编辑器**：EditorJS
 - **绘图工具**：Excalidraw
-- **实时协作**：WebSocket 或 Firebase
+- **实时协作**：WebSocket
 - **后端**：supabase
 - **数据库**：PostgreSQL
 
@@ -154,11 +153,12 @@ DrawText 采用 **MIT 许可证**。详情请参阅 [LICENSE](https://github.com
 
 ## 支持与反馈
 
-如果你有任何问题或建议，欢迎通过以下方式联系我们：
+如果你有任何问题、合作的想法，或者只是想打个招呼，随时与我联系！
 
-- **GitHub Issues**：提交问题或功能请求。
-- **电子邮件**：gejialun88@gmail.com
-- **WX**：加入我们的 gegarron
+- **电子邮件**：[gejialun88@gmail.com](mailto:gejialun88@gmail.com)
+- **Twitter**：[@gejialun88](https://x.com/gejialun88)
+- **个人网站**：[我的网站](https://gegarron.com)
+- **微信号**：gegarron
 
 ---
 
@@ -176,3 +176,5 @@ DrawText 采用 **MIT 许可证**。详情请参阅 [LICENSE](https://github.com
 ---
 
 **DrawText** - 让创意表达更加自由和直观！ 🚀
+
+## 项目展示

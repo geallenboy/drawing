@@ -1,11 +1,11 @@
 
 "use client"
-import { redirect } from "next/navigation"
+import { useRouter } from "next/navigation";
 import { createClient } from "./supabase/client"
 
 
 const signInWith = (provider: any) => async () => {
-    console.log(provider, 1111)
+    const router = useRouter();
     const supabase = await createClient()
     const auth_callback_url = `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`
     const { data, error } = await supabase.auth.signInWithOAuth({
@@ -19,7 +19,8 @@ const signInWith = (provider: any) => async () => {
     if (error) {
         console.log(error)
     }
-    redirect(data.url || "")
+    router.push(data.url as string);
+
 }
 
 export const signinWithGoogle = signInWith('google')

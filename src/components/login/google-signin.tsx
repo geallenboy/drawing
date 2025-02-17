@@ -2,8 +2,9 @@
 
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
-import { signinWithGoogle } from "@/app/actions/auth-actions";
+
 import { useTranslations } from "next-intl";
+import { signinWithGoogle } from "@/lib/auth";
 
 export const GoogleSignin = () => {
   const loginT = useTranslations("login");

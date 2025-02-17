@@ -1,5 +1,5 @@
 "use server";
-import { createClient } from "@/lib/supabase/server";
+import { createServer } from "@/lib/supabase/server";
 import { Database } from "@datatypes.types";
 
 
@@ -8,7 +8,7 @@ type updateFileProps = Database["public"]["Tables"]["file"]["Update"]
 
 export const getByIdFileAction = async (id: string): Promise<ActionResponse> => {
 
-    const supabase = await createClient()
+    const supabase = await createServer()
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
@@ -36,7 +36,7 @@ export const getByIdFileAction = async (id: string): Promise<ActionResponse> => 
 
 export const getAllFileAction = async (limit?: number): Promise<ActionResponse> => {
 
-    const supabase = await createClient()
+    const supabase = await createServer()
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
@@ -66,7 +66,7 @@ export const getAllFileAction = async (limit?: number): Promise<ActionResponse> 
 }
 
 export const delFileAction = async (id: number): Promise<ActionResponse> => {
-    const supabase = await createClient()
+    const supabase = await createServer()
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
         return {
@@ -92,7 +92,7 @@ export const delFileAction = async (id: number): Promise<ActionResponse> => {
 }
 
 export const addFileAction = async (data: addFileProps): Promise<ActionResponse> => {
-    const supabase = await createClient()
+    const supabase = await createServer()
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
@@ -122,7 +122,7 @@ export const addFileAction = async (data: addFileProps): Promise<ActionResponse>
 }
 
 export const updateFileAction = async (data: updateFileProps): Promise<ActionResponse> => {
-    const supabase = await createClient()
+    const supabase = await createServer()
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {

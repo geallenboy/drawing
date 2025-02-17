@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { createClient } from "@/lib/supabase/server";
+import { createServer } from "@/lib/supabase/server";
 import { getUser } from "@/lib/supabase/queries";
 import { LanguageSwitcher } from "./language-switcher";
 import { ModeToggle } from "./mode-toggle";
@@ -46,7 +46,7 @@ const NavItemsLeft = () => {
 };
 
 const Navigtion = async () => {
-  const supabase = await createClient();
+  const supabase = await createServer();
   const user = await getUser(supabase);
 
   return (

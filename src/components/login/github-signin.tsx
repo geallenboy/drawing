@@ -2,8 +2,9 @@
 
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
-import { signinWithGithub } from "@/app/actions/auth-actions";
+
 import { useTranslations } from "next-intl";
+import { signinWithGithub } from "@/lib/auth";
 
 export const GithubSignin = () => {
   const loginT = useTranslations("login");

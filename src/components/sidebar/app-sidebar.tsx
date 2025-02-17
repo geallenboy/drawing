@@ -8,17 +8,15 @@ import {
   SidebarFooter,
   SidebarHeader,
   SidebarMenuButton,
-  SidebarRail,
+  SidebarRail
 } from "@/components/ui/sidebar";
-import { createClient } from "@/lib/supabase/server";
+import { createServer } from "@/lib/supabase/server";
 import Title from "./title";
 
-export const AppSidebar = async ({
-  ...props
-}: React.ComponentProps<typeof Sidebar>) => {
-  const supbase = await createClient();
+export const AppSidebar = async ({ ...props }: React.ComponentProps<typeof Sidebar>) => {
+  const supbase = await createServer();
   const {
-    data: { user },
+    data: { user }
   } = await supbase.auth.getUser();
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -40,7 +38,7 @@ export const AppSidebar = async ({
         <NavUser
           user={{
             name: user?.user_metadata.fullName,
-            email: user?.user_metadata.email,
+            email: user?.user_metadata.email
           }}
         />
       </SidebarFooter>

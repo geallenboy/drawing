@@ -1,5 +1,5 @@
 "use server";
-import { createClient } from "@/lib/supabase/server";
+import { createServer } from "@/lib/supabase/server";
 import { Database } from "@datatypes.types";
 
 
@@ -8,7 +8,7 @@ type updateDrawingProps = Database["public"]["Tables"]["drawing"]["Update"]
 
 export const getByIdDrawingAction = async (id: string): Promise<ActionResponse> => {
 
-    const supabase = await createClient()
+    const supabase = await createServer()
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
@@ -36,7 +36,7 @@ export const getByIdDrawingAction = async (id: string): Promise<ActionResponse> 
 
 export const getAllDrawingAction = async (limit?: number): Promise<ActionResponse> => {
 
-    const supabase = await createClient()
+    const supabase = await createServer()
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
@@ -66,7 +66,7 @@ export const getAllDrawingAction = async (limit?: number): Promise<ActionRespons
 }
 
 export const delDrawingAction = async (id: number): Promise<ActionResponse> => {
-    const supabase = await createClient()
+    const supabase = await createServer()
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
         return {
@@ -92,7 +92,7 @@ export const delDrawingAction = async (id: number): Promise<ActionResponse> => {
 }
 
 export const addDrawingAction = async (data: addDrawingProps): Promise<ActionResponse> => {
-    const supabase = await createClient()
+    const supabase = await createServer()
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
@@ -123,7 +123,7 @@ export const addDrawingAction = async (data: addDrawingProps): Promise<ActionRes
 }
 
 export const updateDrawingAction = async (data: updateDrawingProps): Promise<ActionResponse> => {
-    const supabase = await createClient()
+    const supabase = await createServer()
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {

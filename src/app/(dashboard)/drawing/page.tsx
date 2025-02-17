@@ -1,10 +1,10 @@
 import React from "react";
-import { createClient } from "@/lib/supabase/server";
+import { createServer } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import CanvasContent from "@/components/drawing/canvas-content";
 
 const DrawingPage = async () => {
-  const supabase = await createClient();
+  const supabase = await createServer();
   const {
     data: { user }
   } = await supabase.auth.getUser();

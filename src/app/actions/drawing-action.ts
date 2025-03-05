@@ -18,7 +18,7 @@ export const getByIdDrawingAction = async (id: string): Promise<ActionResponse> 
             data: null
         }
     }
-    const { data, error } = await supabase.from("drawing").select("*").eq("user_id", user.id).eq("id", id).order("created_at", { ascending: false })
+    const { data, error } = await supabase.from("dt_drawing").select("*").eq("user_id", user.id).eq("id", id).order("created_at", { ascending: false })
     console.log(data, error)
     if (error) {
         return {
@@ -46,7 +46,7 @@ export const getAllDrawingAction = async (limit?: number): Promise<ActionRespons
             data: null
         }
     }
-    let query = supabase.from("drawing").select("*").eq("user_id", user.id).order("created_at", { ascending: false })
+    let query = supabase.from("dt_drawing").select("*").eq("user_id", user.id).order("created_at", { ascending: false })
     if (limit) {
         query = query.limit(limit)
     }
@@ -75,7 +75,7 @@ export const delDrawingAction = async (id: number): Promise<ActionResponse> => {
             data: null
         }
     }
-    const { data, error } = await supabase.from("drawing").delete().eq("id", id).eq('user_id', user.id);
+    const { data, error } = await supabase.from("dt_drawing").delete().eq("id", id).eq('user_id', user.id);
 
     if (error) {
         return {
@@ -102,7 +102,7 @@ export const addDrawingAction = async (data: addDrawingProps): Promise<ActionRes
             data: null
         }
     }
-    const { data: dbData, error: dbError } = await supabase.from('drawing').insert([{
+    const { data: dbData, error: dbError } = await supabase.from('dt_drawing').insert([{
         user_id: user.id,
         name: data.name || "drawing name",
         drawing_data: data.drawing_data || "",
@@ -134,7 +134,7 @@ export const updateDrawingAction = async (data: updateDrawingProps): Promise<Act
         }
     }
 
-    const { data: dbData, error: dbError } = await supabase.from('drawing').update([{
+    const { data: dbData, error: dbError } = await supabase.from('dt_drawing').update([{
         ...data
     }]).eq("id", data.id).eq('user_id', user.id);
 

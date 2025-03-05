@@ -18,7 +18,7 @@ export const getByIdFileAction = async (id: string): Promise<ActionResponse> => 
             data: null
         }
     }
-    const { data, error } = await supabase.from("file").select("*").eq("user_id", user.id).eq("id", id).order("created_at", { ascending: false })
+    const { data, error } = await supabase.from("dt_file").select("*").eq("user_id", user.id).eq("id", id).order("created_at", { ascending: false })
     console.log("data:", data)
     if (error) {
         return {
@@ -46,7 +46,7 @@ export const getAllFileAction = async (limit?: number): Promise<ActionResponse> 
             data: null
         }
     }
-    let query = supabase.from("file").select("*").eq("user_id", user.id).order("created_at", { ascending: false })
+    let query = supabase.from("dt_file").select("*").eq("user_id", user.id).order("created_at", { ascending: false })
     if (limit) {
         query = query.limit(limit)
     }
@@ -75,7 +75,7 @@ export const delFileAction = async (id: number): Promise<ActionResponse> => {
             data: null
         }
     }
-    const { data, error } = await supabase.from("file").delete().eq("id", id).eq('user_id', user.id);
+    const { data, error } = await supabase.from("dt_file").delete().eq("id", id).eq('user_id', user.id);
     console.log(data, error)
     if (error) {
         return {
@@ -102,7 +102,7 @@ export const addFileAction = async (data: addFileProps): Promise<ActionResponse>
             data: null
         }
     }
-    const { data: dbData, error: dbError } = await supabase.from('file').insert([{
+    const { data: dbData, error: dbError } = await supabase.from('dt_file').insert([{
         user_id: user.id,
         name: data.name || "file name",
         file_data: data.file_data || "",
@@ -132,7 +132,7 @@ export const updateFileAction = async (data: updateFileProps): Promise<ActionRes
             data: null
         }
     }
-    const { data: dbData, error: dbError } = await supabase.from('file').update([{
+    const { data: dbData, error: dbError } = await supabase.from('dt_file').update([{
         ...data
     }]).eq("id", data.id).eq('user_id', user.id);
 

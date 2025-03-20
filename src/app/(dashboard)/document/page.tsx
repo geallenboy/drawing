@@ -1,18 +1,14 @@
+"use client";
+
 import React from "react";
-import { createServer } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
-import DocumentContent from "@/components/document/document-content";
-
+import dynamic from "next/dynamic";
+// 使用动态导入，禁用 SSR
+const DocumentWorkspace = dynamic(
+  () => import("@/components/feature/document/document-workspace"),
+  { ssr: false } // 这确保组件只在客户端渲染
+);
 const DocumentPage = async () => {
-  const supabase = await createServer();
-  const {
-    data: { user }
-  } = await supabase.auth.getUser();
-  if (!user) {
-    return redirect("/login");
-  }
-
-  return <DocumentContent />;
+  return <DocumentWorkspace />;
 };
 
 export default DocumentPage;

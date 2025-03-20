@@ -1,5 +1,5 @@
 import createNextIntlPlugin from "next-intl/plugin";
-const withNextIntl = createNextIntlPlugin();
+const withNextIntl = createNextIntlPlugin("./src/translate/i18n/request.ts");
 
 const nextConfig = {
   reactStrictMode: false,
@@ -8,10 +8,6 @@ const nextConfig = {
       {
         protocol: "https",
         hostname: "replicate.delivery"
-      },
-      {
-        protocol: "https",
-        hostname: "uordttojdpbxyeyohfcl.supabase.co"
       }
     ]
   }

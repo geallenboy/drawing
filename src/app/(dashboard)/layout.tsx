@@ -1,13 +1,9 @@
-import AppSidebar from "@/components/sidebar/app-sidebar";
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
+import AppSidebar from "@/components/custom/sidebar/app-sidebar";
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import React from "react";
 
 const DashboardLayout = ({
-  children,
+  children
 }: Readonly<{
   children: React.ReactNode;
 }>) => {

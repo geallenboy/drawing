@@ -95,7 +95,6 @@ DrawText 是一个开源的创作工具，旨在为用户提供一个简单、�
 - **文本编辑器**：EditorJS
 - **绘图工具**：Excalidraw
 - **实时协作**：WebSocket
-- **后端**：supabase
 - **数据库**：PostgreSQL
 
 ---

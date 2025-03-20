@@ -1,23 +1,15 @@
+import Title from "@/components/feature/dashboard/title";
+import AccountForm from "@/components/feature/users/account-form";
+import SecuritySetting from "@/components/feature/users/security-setting";
 import React from "react";
-import Title from "@/components/account/title";
-import { getUser } from "@/lib/supabase/queries";
-import { redirect } from "next/navigation";
-import AccountForm from "@/components/account/account-form";
-import SecuritySetting from "@/components/account/security-setting";
-import { createServer } from "@/lib/supabase/server";
 
 const AccountSettingsPage = async () => {
-  const supabase = await createServer();
-  const [user] = await Promise.all([getUser(supabase)]);
-  if (!user) {
-    return redirect("/login");
-  }
   return (
     <div className="container mx-auto space-y-4">
       <Title />
       <div className="gird space-y-4">
-        <AccountForm user={user} />
-        <SecuritySetting user={user} />
+        <AccountForm user={null} />
+        <SecuritySetting user={null} />
       </div>
     </div>
   );

@@ -13,7 +13,6 @@ import {
   DocumentToolbar,
   DocumentSettingsPanel,
   DocumentHistoryPanel,
-  DocumentSharingDialog,
   DocumentHelpDialog,
   DocumentEditor,
   LoadingState,
@@ -28,7 +27,7 @@ dayjs.locale("zh-cn");
 // 本地存储键前缀
 const STORAGE_KEY_PREFIX = "doc_autosave_";
 
-const DocumentWorkspacePage = () => {
+const DocumentEditedPage = () => {
   const router = useRouter();
   const params = useParams();
   const id = (params.id || "") as string;
@@ -43,7 +42,6 @@ const DocumentWorkspacePage = () => {
   const [isFavorite, setIsFavorite] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
-  const [isSharingOpen, setIsSharingOpen] = useState(false);
   const [sharingLevel, setSharingLevel] = useState("private");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [editorTheme, setEditorTheme] = useState("default");
@@ -54,8 +52,99 @@ const DocumentWorkspacePage = () => {
   const editorRef = useRef<any>(null);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  // 保存时创建历史记录
+  const createHistoryEntry = async (
+    content: any,
+    isAutosave: boolean = true,
+    changeDescription: string = ""
+  ) => {
+    if (!fileData?.id || isNewDocument) return;
+
+    try {
+      // 计算当前版本号
+      const currentVersion = fileData.version || 1;
+      // 使用当前版本号而不是增加版本号，因为版本号已经在saveToDatabase中增加了
+      const historyVersion = currentVersion;
+
+      // 计算字数
+      const counts = updateWordCount(content);
+
+      console.log(
+        `创建历史记录: 版本 ${historyVersion}, 类型: ${
+          isAutosave ? "自动" : "手动"
+        }, 描述: ${changeDescription}`
+      );
+
+      // 创建历史记录
+      await createFileAction(fileData.id, content, historyVersion, fileData.userId);
+    } catch (error) {
+      console.error("创建历史记录失败:", error);
+    }
+  };
+
+  // 添加恢复版本的处理函数
+  const handleRestoreVersion = (versionData: any) => {
+    if (editorRef.current && versionData) {
+      try {
+        // 更新编辑器内容
+        editorRef.current.render(versionData);
+        setIsDirty(true);
+      } catch (error) {
+        console.error("恢复版本失败:", error);
+        toast.error("恢复版本失败");
+      }
+    }
+  };
   // 当用户想要离开页面时，如果有未保存的更改，显示确认对话框
   useBeforeUnload(isDirty, "您有未保存的更改，确定要离开吗？");
+
+  // 添加定期历史记录创建逻辑
+  useEffect(() => {
+    if (isNewDocument || !fileData?.id || !editorRef.current) return;
+
+    // 根据快照频率设置不同的间隔
+    const getIntervalTime = () => {
+      switch (fileData?.snapshotFrequency) {
+        case "hourly":
+          return 60 * 60 * 1000; // 1小时
+        case "daily":
+          return 24 * 60 * 60 * 1000; // 24小时
+        case "manual":
+        default:
+          return null; // 不自动创建快照
+      }
+    };
+
+    const intervalTime = getIntervalTime();
+    if (!intervalTime) return;
+
+    // 添加一个上次快照的时间追踪
+    let lastSnapshotTime = Date.now();
+
+    const snapshotInterval = setInterval(async () => {
+      const now = Date.now();
+      // 确保自上次保存后已经过了足够的时间（至少30分钟）
+      // 这可以避免与常规自动保存过于接近
+      if (now - lastSnapshotTime < 30 * 60 * 1000) return;
+
+      // 只有当编辑器已初始化并且有内容变化时才创建快照
+      if (editorRef.current && isDirty) {
+        try {
+          const content = await editorRef.current.save();
+          await createHistoryEntry(
+            content,
+            true,
+            `定期${fileData?.snapshotFrequency === "hourly" ? "小时" : "每日"}快照`
+          );
+          lastSnapshotTime = now;
+        } catch (error) {
+          console.error("创建历史快照失败:", error);
+        }
+      }
+    }, Math.min(intervalTime, 15 * 60 * 1000)); // 最多每15分钟检查一次
+
+    return () => clearInterval(snapshotInterval);
+  }, [fileData?.id, fileData?.snapshotFrequency, isNewDocument, createHistoryEntry, isDirty]);
 
   // 从本地存储中加载草稿
   const loadDraft = useCallback(() => {
@@ -233,9 +322,16 @@ const DocumentWorkspacePage = () => {
     return { words, characters };
   }, []);
 
-  // 节流保存到数据库
+  // 修改 saveToDatabase 函数，添加历史记录描述参数
   const saveToDatabase = useCallback(
-    async (content: any, name: string, description: string = "", tags: string[] = []) => {
+    async (
+      content: any,
+      name: string,
+      description: string = "",
+      tags: string[] = [],
+      historyDescription: string = "自动保存", // 添加历史记录描述参数
+      isAutosave: boolean = true // 添加是否自动保存标志
+    ) => {
       try {
         // 计算字数统计
         const counts = updateWordCount(content);
@@ -248,7 +344,8 @@ const DocumentWorkspacePage = () => {
           tags,
           data: content,
           wordCount: counts.words,
-          charCount: counts.characters
+          charCount: counts.characters,
+          version: (fileData?.version || 1) + 1 // 增加版本号
         };
 
         let success = false;
@@ -270,6 +367,13 @@ const DocumentWorkspacePage = () => {
           // 如果是已有文档，调用更新接口
           const response = await updateFileAction(id, saveData);
           success = response.success;
+
+          // 保存成功后创建历史记录，使用传入的描述和自动保存标志
+          if (success) {
+            await createHistoryEntry(content, isAutosave, historyDescription);
+            // 更新本地文件数据以反映新版本号
+            setFileData({ ...saveData, id: fileData.id, userId: fileData.userId });
+          }
         }
 
         if (success) {
@@ -297,8 +401,37 @@ const DocumentWorkspacePage = () => {
         return false;
       }
     },
-    [fileData, id, isNewDocument, saveDraft, updateWordCount, router]
+    [fileData, id, isNewDocument, saveDraft, updateWordCount, router, createHistoryEntry]
   );
+
+  // 修改手动保存函数，确保创建手动历史记录
+  const onSave = async () => {
+    if (editorRef.current) {
+      try {
+        const outputData = await editorRef.current.save();
+
+        // 如果不是新文档，立即保存到本地存储作为备份
+        if (!isNewDocument) {
+          saveDraft(outputData, inputVal, description, selectedTags);
+        }
+
+        const success = await saveToDatabase(outputData, inputVal, description, selectedTags);
+
+        if (success) {
+          toast.success("文档保存成功!");
+          setIsDirty(false);
+          setLastSaveTime(new Date());
+
+          // 手动保存时单独创建非自动保存的历史记录
+        } else {
+          toast.error("文档保存失败!");
+        }
+      } catch (error) {
+        console.error("保存失败:", error);
+        toast.error("文档保存失败! 请重试");
+      }
+    }
+  };
 
   // 设置自动保存定时器
   const setupAutoSave = useCallback(() => {
@@ -377,36 +510,53 @@ const DocumentWorkspacePage = () => {
     };
   }, [inputVal, description, selectedTags, isDirty, saveDraft, isNewDocument]);
 
-  const onSave = async () => {
-    if (editorRef.current) {
-      try {
-        const outputData = await editorRef.current.save();
+  // 修改 toggleFavorite 函数，添加即时数据库更新功能
+  // 替换现有的 toggleFavorite 函数
 
-        // 如果不是新文档，立即保存到本地存储作为备份
-        if (!isNewDocument) {
-          saveDraft(outputData, inputVal, description, selectedTags);
-        }
+  const toggleFavorite = async () => {
+    // 新的收藏状态
+    const newFavoriteStatus = !isFavorite;
 
-        const success = await saveToDatabase(outputData, inputVal, description, selectedTags);
-
-        if (success) {
-          toast.success("文档保存成功!");
-          setIsDirty(false);
-          setLastSaveTime(new Date());
-        } else {
-          toast.error("文档保存失败!");
-        }
-      } catch (error) {
-        console.error("保存失败:", error);
-        toast.error("文档保存失败! 请重试");
-      }
+    if (isNewDocument) {
+      // 如果是新文档，只更新本地状态，等待文档保存时一起保存
+      setIsFavorite(newFavoriteStatus);
+      setIsDirty(true); // 只有新文档才设置脏状态
+      toast.success(newFavoriteStatus ? "已添加到收藏" : "已从收藏中移除");
+      return;
     }
-  };
 
-  const toggleFavorite = () => {
-    setIsFavorite(!isFavorite);
-    setIsDirty(true);
-    toast.success(isFavorite ? "已从收藏中移除" : "已添加到收藏");
+    try {
+      // 立即更新UI状态
+      setIsFavorite(newFavoriteStatus);
+
+      // 准备更新数据
+      const updateData = {
+        id: id,
+        isFavorite: newFavoriteStatus
+      };
+
+      // 调用API
+      const response = await updateFileAction(id, updateData);
+
+      if (response.success) {
+        toast.success(newFavoriteStatus ? "已添加到收藏" : "已从收藏中移除");
+
+        // 更新本地文件数据
+        setFileData((prevData: any) => ({
+          ...prevData,
+          isFavorite: newFavoriteStatus
+        }));
+      } else {
+        // 更新失败，恢复状态
+        setIsFavorite(!newFavoriteStatus);
+        toast.error("更新收藏状态失败");
+      }
+    } catch (error) {
+      console.error("收藏操作失败:", error);
+      // 恢复状态
+      setIsFavorite(!newFavoriteStatus);
+      toast.error("收藏操作失败，请重试");
+    }
   };
 
   const toggleTag = (tag: string) => {
@@ -416,17 +566,6 @@ const DocumentWorkspacePage = () => {
       setSelectedTags([...selectedTags, tag]);
     }
     setIsDirty(true);
-  };
-
-  const handleShareLevelChange = (level: string) => {
-    setSharingLevel(level);
-    setIsDirty(true);
-    const messages = {
-      private: "文档已设为私密，仅自己可访问",
-      limited: "文档已设为受限访问，仅特定用户可访问",
-      public: "文档已设为公开，任何人都可以访问"
-    };
-    toast.success(messages[level as keyof typeof messages]);
   };
 
   const navigateToDocuments = () => {
@@ -460,13 +599,12 @@ const DocumentWorkspacePage = () => {
         isDirty={isDirty}
         updatedAt={fileData?.updatedAt}
         onHistoryClick={() => setIsHistoryOpen(true)}
-        onShareClick={() => setIsSharingOpen(true)}
-        onExport={handleExport}
         onSave={onSave}
         onMenuClick={() => setIsSheetOpen(true)}
         navigateBack={navigateToDocuments}
         sharingLevel={sharingLevel}
         setIsDirty={setIsDirty}
+        id={id} // 添加文档ID参数
       />
 
       {/* 编辑工具栏 */}
@@ -507,16 +645,7 @@ const DocumentWorkspacePage = () => {
         isOpen={isHistoryOpen}
         setIsOpen={setIsHistoryOpen}
         fileData={fileData}
-      />
-
-      {/* 共享管理对话框 */}
-      <DocumentSharingDialog
-        isOpen={isSharingOpen}
-        setIsOpen={setIsSharingOpen}
-        id={id}
-        sharingLevel={sharingLevel}
-        setSharingLevel={handleShareLevelChange}
-        fileData={fileData}
+        onRestoreVersion={handleRestoreVersion}
       />
 
       {/* 帮助按钮和对话框 */}
@@ -525,15 +654,4 @@ const DocumentWorkspacePage = () => {
   );
 };
 
-// 处理导出功能
-const handleExport = (format: string) => {
-  const formats = {
-    pdf: "PDF 文档",
-    docx: "Word 文档",
-    md: "Markdown 文件",
-    html: "HTML 网页"
-  };
-  toast.success(`已开始下载为 ${formats[format as keyof typeof formats]}`);
-};
-
-export default DocumentWorkspacePage;
+export default DocumentEditedPage;

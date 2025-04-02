@@ -35,15 +35,15 @@ const BulkActionsBar = () => {
       <Button variant="ghost" size="sm" onClick={() => setSelectedFiles([])}>
         取消选择
       </Button>
-      <Button variant="ghost" size="sm" onClick={bulkDownload}>
+      {/* <Button variant="ghost" size="sm" onClick={bulkDownload}>
         <Download className="h-4 w-4 mr-1" /> 下载
-      </Button>
+      </Button> */}
       <Button variant="ghost" size="sm" onClick={bulkShare}>
         <Share2 className="h-4 w-4 mr-1" /> 分享
       </Button>
-      <Button variant="ghost" size="sm" onClick={bulkAddTags}>
+      {/* <Button variant="ghost" size="sm" onClick={bulkAddTags}>
         <Tag className="h-4 w-4 mr-1" /> 添加标签
-      </Button>
+      </Button> */}
       <Button variant="ghost" size="sm" className="text-red-600" onClick={bulkDelete}>
         <Trash className="h-4 w-4 mr-1" /> 删除
       </Button>

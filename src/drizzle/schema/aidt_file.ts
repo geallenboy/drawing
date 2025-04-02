@@ -1,4 +1,4 @@
-import { pgTable, text, json, boolean, integer } from "drizzle-orm/pg-core";
+import { pgTable, text, json, boolean, integer, timestamp, jsonb } from "drizzle-orm/pg-core";
 import { createdAt, id, updatedAt } from "../schemaHelpers";
 
 export const AIDTFileTable = pgTable("aidt_file", {
@@ -8,19 +8,38 @@ export const AIDTFileTable = pgTable("aidt_file", {
     data: json().notNull().default({}),
     fileUrl: text().notNull().default(""),
     userId: text().notNull(),
-    // 新增字段
-    tags: text().array().notNull().default([]), // 使用 .array() 方法
     isFavorite: boolean().notNull().default(false),
-    sharingLevel: text().notNull().default("private"), // 'private', 'limited', 'public'
-    collaborators: json().notNull().default([]), // 存储协作者信息的数组
+    // 历史记录相关
     lastModifiedBy: text(), // 最后修改人ID
-    revisionHistory: json().notNull().default([]), // 使用JSON数组存储修订历史记录
-    wordCount: integer().notNull().default(0), // 文档字数统计
-    charCount: integer().notNull().default(0), // 文档字符统计
-    metadata: json().notNull().default({}), // 可扩展的元数据字段，可存储如主题首选项等信息
-    isDeleted: boolean().notNull().default(false), // 软删除标记
+    revisionHistory: jsonb().notNull().default([]), // [{version, timestamp, userId, summary, snapshot}]
+    snapshotFrequency: text().notNull().default("hourly"), // 'manual', 'hourly', 'daily'
+    maxHistoryItems: integer().notNull().default(50), // 保留的最大历史记录数
+
+    // 文件管理
+    isDeleted: boolean().notNull().default(false),
+    deletedAt: timestamp(), // 删除时间用于回收站功能
+    parentFolderId: text(), // 文件所在文件夹ID
+    version: integer().notNull().default(1), // 文档版本号
+    // 时间戳
     createdAt,
     updatedAt,
 });
 
+// 为文档历史记录创建单独的表
+export const AIDTFileHistoryTable = pgTable("aidt_file_history", {
+    id,
+    fileId: text().notNull(), // 关联到原始文件
+    version: integer().notNull(), // 版本号
+    data: json().notNull(), // 这个版本的完整文档内容
+    userId: text().notNull(), // 创建这个版本的用户ID
+    createdAt: timestamp().notNull().defaultNow(),
+    changeDescription: text().default(""), // 版本描述/变更说明
+    wordCount: integer().notNull().default(0),
+    charCount: integer().notNull().default(0),
+    isAutosave: boolean().notNull().default(true), // 是自动保存还是手动创建的版本
+});
+
+
+
 export type AIDTFile = typeof AIDTFileTable.$inferSelect;
+export type AIDTFileHistory = typeof AIDTFileHistoryTable.$inferSelect;

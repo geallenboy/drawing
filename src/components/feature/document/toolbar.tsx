@@ -73,9 +73,7 @@ const FileListToolbar = ({ refreshData }: FileListToolbarProps) => {
           <Button onClick={createNewFile}>
             <Plus className="mr-2 h-4 w-4" /> 新建文件
           </Button>
-          <Button variant="outline">
-            <Upload className="mr-2 h-4 w-4" /> 上传
-          </Button>
+
           <Button variant="outline" onClick={refreshData}>
             <RefreshCcw className="mr-2 h-4 w-4" /> 刷新
           </Button>
@@ -108,7 +106,7 @@ const FileListToolbar = ({ refreshData }: FileListToolbarProps) => {
             )}
           </Button>
 
-          <div className="border rounded-md p-1 flex">
+          <div className="border rounded-md  flex">
             <Button
               variant={viewType === "list" ? "secondary" : "ghost"}
               size="sm"

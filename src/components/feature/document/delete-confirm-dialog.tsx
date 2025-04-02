@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { deleteFileAction } from "@/actions/file/file-action";
+import { softDeleteFileAction } from "@/actions/file/file-action";
 
 interface DeleteConfirmDialogProps {
   open: boolean;
@@ -26,7 +26,7 @@ const DeleteConfirmDialog = ({ open, setOpen, fileId, onDelete }: DeleteConfirmD
     if (!fileId) return;
 
     try {
-      const { success } = await deleteFileAction(fileId);
+      const { success } = await softDeleteFileAction(fileId);
       if (success) {
         toast.success("文件已删除");
         onDelete();

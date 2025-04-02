@@ -3,7 +3,6 @@
 
 import React, { useEffect } from "react";
 import { toast } from "sonner";
-import { listFilesAction } from "@/actions/file/file-action";
 import { useFileListStore } from "@/store/fileStore";
 import FileListToolbar from "./toolbar";
 import FileListFilterPanel from "./filter-panel";
@@ -11,6 +10,7 @@ import FileListContent from "./content";
 import BulkActionsBar from "./bulk-actions-bar";
 import DeleteConfirmDialog from "./delete-confirm-dialog";
 import { useRouter } from "next/navigation";
+import { getFilesByUserIdAction } from "@/actions/file/file-action";
 
 type FileListProps = {
   searchQuery?: string;
@@ -51,7 +51,7 @@ const FileList = ({ searchQuery: initialSearchQuery = "" }: FileListProps) => {
   const getAllData = async () => {
     setLoading(true);
     try {
-      const { success, data, error } = await listFilesAction();
+      const { success, data, error } = await getFilesByUserIdAction();
       if (success && data) {
         // 为演示添加一些随机属性
         const enhancedFiles = (data.files || []).map((file: any) => ({

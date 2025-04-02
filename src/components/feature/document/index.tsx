@@ -5,6 +5,6 @@ export { DocumentToolbar } from "./document-toolbar";
 export { DocumentEditor } from "./document-editor";
 export { DocumentSettingsPanel } from "./document-settings-panel";
 export { DocumentHistoryPanel } from "./document-history-panel";
-export { DocumentSharingDialog } from "./document-sharing-dialog";
+
 export { DocumentHelpDialog } from "./document-help-dialog";
 export { LoadingState, ErrorState } from "./error-state";

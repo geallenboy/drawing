@@ -7,7 +7,7 @@ const DocumentWorkspace = dynamic(
   () => import("@/components/feature/document/document-workspace"),
   { ssr: false } // 这确保组件只在客户端渲染
 );
-const DocumentPage = async () => {
+const DocumentPage = () => {
   return <DocumentWorkspace />;
 };
 

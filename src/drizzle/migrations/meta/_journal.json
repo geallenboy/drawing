@@ -15,6 +15,13 @@
       "when": 1742468947286,
       "tag": "0001_early_jackal",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1743558518674,
+      "tag": "0002_furry_maria_hill",
+      "breakpoints": true
     }
   ]
 }

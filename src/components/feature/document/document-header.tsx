@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +11,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
+// 修改 DocumentHeader 组件，添加导出菜单
+import { DocumentExportMenu } from "./document-export-menu";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   Save,
@@ -22,10 +24,12 @@ import {
   Menu,
   Lock,
   Users,
-  Globe
+  Globe,
+  Loader2
 } from "lucide-react";
 import dayjs from "dayjs";
 
+// 在组件参数中添加 id 属性
 interface DocumentHeaderProps {
   title: string;
   onTitleChange: (title: string) => void;
@@ -33,15 +37,15 @@ interface DocumentHeaderProps {
   toggleFavorite: () => void;
   lastSaveTime: Date | null;
   isDirty: boolean;
-  updatedAt?: string | Date;
+  updatedAt?: string;
   onHistoryClick: () => void;
   onShareClick: () => void;
-  onExport: (format: string) => void;
   onSave: () => void;
   onMenuClick: () => void;
   navigateBack: () => void;
   sharingLevel: string;
   setIsDirty: (dirty: boolean) => void;
+  id: string; // 新增: 文档ID
 }
 
 export const DocumentHeader: React.FC<DocumentHeaderProps> = ({
@@ -54,16 +58,29 @@ export const DocumentHeader: React.FC<DocumentHeaderProps> = ({
   updatedAt,
   onHistoryClick,
   onShareClick,
-  onExport,
   onSave,
   onMenuClick,
   navigateBack,
   sharingLevel,
-  setIsDirty
+  setIsDirty,
+  id
 }) => {
+  // 在 DocumentHeader 组件内
+  const [favoriteLoading, setFavoriteLoading] = useState(false);
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onTitleChange(e.target.value);
     setIsDirty(true);
+  };
+  // 收藏按钮处理函数
+  const handleFavoriteClick = async () => {
+    if (favoriteLoading) return;
+
+    setFavoriteLoading(true);
+    try {
+      toggleFavorite();
+    } finally {
+      setFavoriteLoading(false);
+    }
   };
 
   return (
@@ -88,14 +105,22 @@ export const DocumentHeader: React.FC<DocumentHeaderProps> = ({
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={toggleFavorite}
-                  className="focus:outline-none"
+                  onClick={handleFavoriteClick}
+                  className={`transition-all ${
+                    isFavorite
+                      ? "text-yellow-400 hover:text-yellow-500"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                  disabled={favoriteLoading}
+                  title={isFavorite ? "取消收藏" : "添加到收藏"}
                 >
-                  <Star
-                    className={`h-5 w-5 ${
-                      isFavorite ? "text-yellow-500 fill-yellow-500" : "text-gray-400"
-                    }`}
-                  />
+                  {favoriteLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : isFavorite ? (
+                    <Star className="h-4 w-4 fill-yellow-400" />
+                  ) : (
+                    <Star className="h-4 w-4" />
+                  )}
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
@@ -183,19 +208,8 @@ export const DocumentHeader: React.FC<DocumentHeaderProps> = ({
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <Download className="h-4 w-4 mr-1" /> 导出
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => onExport("pdf")}>导出为 PDF</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onExport("docx")}>导出为 Word</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onExport("md")}>导出为 Markdown</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onExport("html")}>导出为 HTML</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {/* 导出菜单 */}
+            <DocumentExportMenu id={id} disabled={isDirty} />
 
             <Button
               className="bg-yellow-500 hover:bg-yellow-600 text-white"

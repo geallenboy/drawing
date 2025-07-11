@@ -4,43 +4,38 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
-import { useTranslations } from "next-intl";
 
-import { LanguageSwitcher } from "./language-switcher";
 import { ModeToggle } from "./mode-toggle";
 import Logo from "@/components/custom/logo";
 import { useUserStore } from "@/store/userStore";
 
 const NavItemsRight = ({ user }: { user: any }) => {
-  const homeT = useTranslations("home.navigtion");
   return (
     <>
-      <LanguageSwitcher />
       <ModeToggle />
       {user ? (
         <Link
           href={"/dashboard"}
           className="text-sm font-medium hover:underline underline-offset-4"
         >
-          <Button variant={"outline"}> {homeT("name")}</Button>
+          <Button variant={"outline"}>进入控制台</Button>
         </Link>
       ) : (
         <Link href={"/sign-in"} className="text-sm font-medium hover:underline underline-offset-4">
-          <Button variant={"outline"}> {homeT("signup")}</Button>
+          <Button variant={"outline"}>登录</Button>
         </Link>
       )}
     </>
   );
 };
 const NavItemsLeft = () => {
-  const homeT = useTranslations("home.navigtion");
   return (
     <>
       <Link href={"#features"} className="text-sm font-medium hover:underline underline-offset-4">
-        {homeT("features")}
+        功能特性
       </Link>
       <Link href={"#faqs"} className="text-sm font-medium hover:underline underline-offset-4">
-        {homeT("faqs")}
+        常见问题
       </Link>
     </>
   );

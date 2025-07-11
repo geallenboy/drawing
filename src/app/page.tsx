@@ -1,19 +1,16 @@
 import React from "react";
-import Faqs from "@/components/feature/landing-page/faqs";
-import Features from "@/components/feature/landing-page/features";
-import Footer from "@/components/feature/landing-page/footer";
-import Hero from "@/components/feature/landing-page/hero";
-import Navigtion from "@/components/feature/landing-page/navigation";
+import CanvasContent from "@/components/feature/drawing/canvas-content";
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
 
-export default function HomePage() {
-  console.log("HomePage");
-  return (
-    <main className="flex flex-col min-h-screen items-center justify-center">
-      <Navigtion />
-      <Hero />
-      <Features />
-      <Faqs />
-      <Footer />
-    </main>
-  );
+export default async function HomePage() {
+  const { userId } = await auth();
+  
+  // 如果用户未登录，跳转到登录页面
+  if (!userId) {
+    redirect("/auth/signin");
+  }
+  
+  // 已登录用户显示绘图管理页面
+  return <CanvasContent />;
 }

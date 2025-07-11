@@ -1,14 +1,16 @@
 "use server";
 
 import { db } from "@/drizzle/db";
-import { AIDTDrawing, AIDTDrawingTable } from "@/drizzle/schema";
+import { AIDTDrawingTable } from "@/drizzle/schemas";
 import { ActionResponse, errorResponse, successResponse } from "@/actions";
 import { eq, sql } from "drizzle-orm";
 import { auth } from "@clerk/nextjs/server";
+import { createDrawingWithMinio, getDrawingWithMinioData, updateDrawingWithMinio } from "@/services/drawing/drawing-service";
+import { deleteDrawingData } from "@/lib/minio";
 
 
 // 创建新绘图
-export async function createDrawingAction(formData: FormData | Record<string, any>): Promise<ActionResponse> {
+export async function createDrawingAction(data: any): Promise<ActionResponse> {
     try {
         // 获取当前用户
         const session = await auth();
@@ -16,24 +18,30 @@ export async function createDrawingAction(formData: FormData | Record<string, an
             return errorResponse("未授权操作");
         }
 
-        // 处理表单数据
-        const data = formData instanceof FormData
-            ? Object.fromEntries(formData.entries())
-            : formData;
-
         // 确保必要字段存在
         if (!data.name) {
             return errorResponse("绘图名称不能为空");
         }
+        
+        // 强制验证文件夹ID
+        if (!data.parentFolderId) {
+            return errorResponse("绘图必须属于某个文件夹");
+        }
 
+        console.log(data, "data")
         // 准备插入数据
         const drawingData = {
             name: data.name as string,
             desc: data.desc as string || "",
             userId: session?.userId,
-            data: data.data ? JSON.parse(data.data as string) : [],
-            parentFolderId: data.parentFolderId as string || null
+            data: data.data || [],
+            parentFolderId: data.parentFolderId as string, // 现在是必需的
+            filepath: data.filepath as string || null,
+            isFavorite: false,
+            isDeleted: false,
+            deletedAt: null
         };
+        console.log(drawingData, "drawingData")
 
         // 创建新绘图
         const [newDrawing] = await db
@@ -112,7 +120,39 @@ export async function getDrawingsByUserIdAction(): Promise<ActionResponse> {
     }
 }
 
-// 更新绘图信息
+// 根据文件夹ID获取绘图
+export async function getDrawingsByFolderIdAction(folderId?: string): Promise<ActionResponse> {
+    try {
+        // 获取当前用户
+        const session = await auth();
+        if (!session?.userId) {
+            return errorResponse("未授权操作");
+        }
+
+        const userId = session?.userId;
+
+        // 根据文件夹ID查询绘图，如果folderId为空或null，则查询根目录的绘图
+        const drawings = await db
+            .select()
+            .from(AIDTDrawingTable)
+            .where(
+                sql`${AIDTDrawingTable.userId} = ${userId} 
+                    AND ${AIDTDrawingTable.isDeleted} = false 
+                    AND ${folderId ? 
+                        sql`${AIDTDrawingTable.parentFolderId} = ${folderId}` : 
+                        sql`${AIDTDrawingTable.parentFolderId} IS NULL`
+                    }`
+            );
+
+        return successResponse({ drawings });
+
+    } catch (error) {
+        console.error("根据文件夹获取绘图时发生错误:", error);
+        return errorResponse(error instanceof Error ? error.message : "获取绘图失败");
+    }
+}
+
+// 更新绘图信息（集成 MinIO）
 export async function updateDrawingAction(id: string, formData: FormData | Record<string, any>): Promise<ActionResponse> {
     try {
         // 获取当前用户
@@ -145,28 +185,22 @@ export async function updateDrawingAction(id: string, formData: FormData | Recor
             : formData;
 
         // 准备更新数据
-        const updateData: Record<string, any> = {
-            updatedAt: new Date()
-        };
+        const updateData: Record<string, any> = {};
 
         // 只更新提供的字段
         if (data.name !== undefined) updateData.name = data.name;
         if (data.desc !== undefined) updateData.desc = data.desc;
+        if (data.parentFolderId !== undefined) updateData.parentFolderId = data.parentFolderId;
+        
+        // 如果有绘图数据，准备上传到 MinIO
         if (data.data !== undefined) {
             updateData.data = typeof data.data === 'string'
                 ? JSON.parse(data.data)
                 : data.data;
         }
-        if (data.parentFolderId !== undefined) updateData.parentFolderId = data.parentFolderId;
 
-        // 执行更新
-        const [updatedDrawing] = await db
-            .update(AIDTDrawingTable)
-            .set(updateData)
-            .where(eq(AIDTDrawingTable.id, id))
-            .returning();
-
-        if (updatedDrawing == null) throw new Error("更新绘图失败");
+        // 使用集成 MinIO 的服务更新绘图
+        const updatedDrawing = await updateDrawingWithMinio(id, updateData);
 
         return successResponse({ drawing: updatedDrawing });
 
@@ -176,7 +210,7 @@ export async function updateDrawingAction(id: string, formData: FormData | Recor
     }
 }
 
-// 删除绘图
+// 删除绘图（包括 MinIO 数据）
 export async function deleteDrawingAction(id: string): Promise<ActionResponse> {
     try {
         // 获取当前用户
@@ -203,7 +237,15 @@ export async function deleteDrawingAction(id: string): Promise<ActionResponse> {
             return errorResponse("无权删除该绘图");
         }
 
-        // 永久删除
+        // 先删除 MinIO 中的数据
+        try {
+            await deleteDrawingData(`${id}.json`);
+        } catch (minioError) {
+            console.warn("删除 MinIO 中的绘图数据失败:", minioError);
+            // MinIO 删除失败不阻止数据库删除，继续执行
+        }
+
+        // 永久删除数据库记录
         const [deletedDrawing] = await db
             .delete(AIDTDrawingTable)
             .where(eq(AIDTDrawingTable.id, id))
@@ -552,5 +594,87 @@ export async function getFolderDrawingsAction(folderId: string): Promise<ActionR
     } catch (error) {
         console.error("获取文件夹绘图时发生错误:", error);
         return errorResponse(error instanceof Error ? error.message : "获取文件夹绘图失败");
+    }
+}
+
+// 创建绘图（集成 MinIO）
+export async function createDrawingWithMinioAction(data: any): Promise<ActionResponse> {
+    try {
+        // 获取当前用户
+        const session = await auth();
+        if (!session?.userId) {
+            return errorResponse("未授权操作");
+        }
+
+        // 确保必要字段存在
+        if (!data.name) {
+            return errorResponse("绘图名称不能为空");
+        }
+        
+        // 强制验证文件夹ID
+        if (!data.parentFolderId) {
+            return errorResponse("绘图必须属于某个文件夹");
+        }
+
+        // 准备插入数据
+        const drawingData = {
+            name: data.name as string,
+            desc: data.desc as string || "",
+            userId: session?.userId,
+            data: data.data || [],
+            parentFolderId: data.parentFolderId as string, // 现在是必需的
+            filepath: null, // 将在创建后由服务更新
+            isFavorite: false,
+            isDeleted: false,
+            deletedAt: null
+        };
+
+        // 使用集成 MinIO 的服务创建绘图
+        const newDrawing = await createDrawingWithMinio(drawingData);
+
+        return successResponse({ drawing: newDrawing });
+
+    } catch (error) {
+        console.error("创建绘图时发生错误:", error);
+        return errorResponse(error instanceof Error ? error.message : "创建绘图失败");
+    }
+}
+
+// 获取绘图及其数据（集成 MinIO）
+export async function getDrawingWithDataAction(id: string): Promise<ActionResponse> {
+    try {
+        // 获取当前用户
+        const session = await auth();
+        if (!session?.userId) {
+            return errorResponse("未授权操作");
+        }
+
+        if (!id) {
+            return errorResponse("绘图ID不能为空");
+        }
+
+        // 获取绘图及 MinIO 数据
+        const drawingWithData = await getDrawingWithMinioData(id);
+
+        if (!drawingWithData) {
+            return errorResponse("未找到指定绘图");
+        }
+
+        // 检查权限
+        if (drawingWithData.userId !== session?.userId) {
+            return errorResponse("无权访问该绘图");
+        }
+
+        // 合并数据库数据和 MinIO 数据
+        const responseData = {
+            ...drawingWithData,
+            data: drawingWithData.minioData || drawingWithData.data || []
+        };
+
+        return successResponse({ drawing: responseData });
+
+    } catch (error) {
+        console.error("获取绘图时发生错误:", error);
+        return errorResponse(error instanceof Error ? error.message : "获取绘图失败");
     }
 }

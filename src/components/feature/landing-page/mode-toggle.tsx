@@ -11,14 +11,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 export const ModeToggle = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { theme, setTheme } = useTheme();
-
-  const t = useTranslations("themeConfig");
 
   // 获取当前主题对应的图标
   const getThemeIcon = () => {
@@ -37,12 +34,12 @@ export const ModeToggle = () => {
   const getThemeText = () => {
     switch (theme) {
       case "light":
-        return t("light");
+        return "浅色";
       case "dark":
-        return t("dark");
+        return "深色";
       case "system":
       default:
-        return t("system");
+        return "系统";
     }
   };
 
@@ -60,15 +57,15 @@ export const ModeToggle = () => {
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={() => setTheme("light")}>
           <Sun className="h-4 w-4 mr-2" />
-          {t("light")}
+          浅色
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setTheme("dark")}>
           <Moon className="h-4 w-4 mr-2" />
-          {t("dark")}
+          深色
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setTheme("system")}>
           <Laptop className="h-4 w-4 mr-2" />
-          {t("system")}
+          系统
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

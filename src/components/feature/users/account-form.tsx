@@ -22,46 +22,42 @@ import {
 import { z } from "zod";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
-import { useTranslations } from "next-intl";
-import { AIUser } from "@/drizzle/schema";
+import { User } from "@/drizzle/schemas";
 
 const accountFormSchema = z.object({
-  name: z.string().min(1).max(36),
+  fullName: z.string().min(1).max(36),
   email: z.string().email(),
 });
 
-const AccountForm = ({ user }: { user: AIUser | null }) => {
+const AccountForm = ({ user }: { user: User | null }) => {
   const toastId = useId();
   const form = useForm<z.infer<typeof accountFormSchema>>({
     resolver: zodResolver(accountFormSchema),
     defaultValues: {
-      name: user?.name,
-      email: user?.email,
+      fullName: user?.fullName || "",
+      email: user?.email || "",
     },
   });
 
-  const accountFormT = useTranslations("account.accountForm");
   console.log(user, "--->");
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{accountFormT("name")}</CardTitle>
-        <CardDescription>{accountFormT("desc")}</CardDescription>
+        <CardTitle>账户信息</CardTitle>
+        <CardDescription>管理您的账户设置和个人信息</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
           <form className="space-y-8">
             <FormField
               control={form.control}
-              name="name"
+              name="fullName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{accountFormT("name")}</FormLabel>
+                  <FormLabel>姓名</FormLabel>
                   <FormControl>
                     <Input disabled {...field} />
                   </FormControl>
-
                   <FormMessage />
                 </FormItem>
               )}
@@ -71,17 +67,17 @@ const AccountForm = ({ user }: { user: AIUser | null }) => {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{accountFormT("email")}</FormLabel>
+                  <FormLabel>邮箱</FormLabel>
                   <FormControl>
                     <Input disabled {...field} />
                   </FormControl>
-                  <FormDescription>{accountFormT("emailDesc")}</FormDescription>
+                  <FormDescription>这是您登录时使用的邮箱地址</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
             <Button disabled type="submit">
-              {accountFormT("button")}
+              更新账户信息
             </Button>
           </form>
         </Form>

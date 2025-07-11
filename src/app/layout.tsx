@@ -1,14 +1,10 @@
 import type { Metadata } from "next";
 import { Toaster } from "@/components/ui/sonner";
 import { Nunito } from "next/font/google";
-import { NextIntlClientProvider } from "next-intl";
-
-import { getLocale, getMessages } from "next-intl/server";
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
-
 import { ThemeProvider } from "@/components/custom/theme-provider";
-import Provider from "./provider";
+import Provider from "@/app/provider";
 
 const MyAppFont = Nunito({ subsets: ["latin"] });
 
@@ -23,24 +19,19 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const locale = await getLocale();
-  const messages = await getMessages();
-
   return (
-    <html lang={locale} suppressHydrationWarning>
+    <html lang="zh-CN" suppressHydrationWarning>
       <body className={`${MyAppFont.className} font-sans`}>
         <ClerkProvider>
           <Provider>
-            <ThemeProvider
+          <ThemeProvider
               attribute="class"
               defaultTheme="system"
               enableSystem={false}
               disableTransitionOnChange
             >
-              <NextIntlClientProvider messages={messages}>
-                {children}
-                <Toaster richColors />
-              </NextIntlClientProvider>
+              {children}
+              <Toaster richColors />
             </ThemeProvider>
           </Provider>
         </ClerkProvider>

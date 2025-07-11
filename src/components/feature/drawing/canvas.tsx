@@ -1,7 +1,7 @@
 "use client";
 import React, { useCallback, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
-import { updateDrawingAction } from "@/app/actions/drawing-action";
+import { updateDrawingAction } from "@/actions/drawing/drawing-action";
 import { toast } from "sonner";
 const Excalidraw = dynamic(async () => (await import("@excalidraw/excalidraw")).Excalidraw, {
   ssr: false
@@ -21,11 +21,10 @@ const Canvas = ({
   useEffect(() => {
     const saveDrawingData = async () => {
       try {
-        if (excalidrawDate) {
-          const { success } = await updateDrawingAction({
-            ...drawingData,
+        if (excalidrawDate && drawingData?.id) {
+          const { success } = await updateDrawingAction(drawingData.id, {
             name,
-            drawing_data: excalidrawDate
+            data: excalidrawDate
           });
           if (success) {
             toast.success("数据更新成功!");
@@ -33,7 +32,10 @@ const Canvas = ({
             toast.error("数据更新失败!");
           }
         }
-      } catch (error) {}
+      } catch (error) {
+        console.error("保存绘图数据失败:", error);
+        toast.error("数据更新失败!");
+      }
     };
     saveDrawingData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -47,7 +49,7 @@ const Canvas = ({
         initialData={{
           elements: Array.isArray(drawingData?.drawing_data) ? drawingData?.drawing_data : [] // 确保是数组
         }}
-        onChange={(excalidrawElements) => setExcalidrawDate(excalidrawElements)}
+        onChange={(excalidrawElements: any) => setExcalidrawDate(excalidrawElements)}
         UIOptions={{
           canvasActions: {
             saveToActiveFile: false,

@@ -15,7 +15,7 @@ export default function Provider({ children }: { children: React.ReactNode }) {
   console.log(userId, 33);
   // Maximum number of retries and exponential backoff delay
   const MAX_RETRIES = 5;
-  const getRetryDelay = (attempt: number) => Math.min(1000 * Math.pow(2, attempt), 10000); // Exponential backoff with max 10s
+  const getRetryDelay = (attempt: number) => Math.min(1000 * Math.pow(2, attempt), 10000);
 
   const init = useCallback(async () => {
     if (!isAuthLoaded) return;
@@ -29,17 +29,15 @@ export default function Provider({ children }: { children: React.ReactNode }) {
         const data = await getCurrentUser({ url: "/" });
         console.log(data, 33);
         if (data) {
-          console.log(`Successfully loaded user data for ${data.name} (${data.email})`);
+          console.log(`Successfully loaded user data for ${data.fullName} (${data.email})`);
           setUser({
-            name: data?.name,
             id: data.id,
-            clerkUserId: data.clerkUserId,
             email: data.email,
-            imageUrl: data.imageUrl || null,
+            fullName: data.fullName,
+            avatarUrl: data.avatarUrl,
+            bio: data.bio || null,
             createdAt: data.createdAt || new Date(),
             updatedAt: data.updatedAt || new Date(),
-            credits: data?.credits,
-            deletedAt: null
           });
         } else if (retryCount < MAX_RETRIES) {
           // If user data is not found, retry with exponential backoff
@@ -109,5 +107,5 @@ export default function Provider({ children }: { children: React.ReactNode }) {
     }
   }, [userId]);
 
-  return <>{children} </>;
+  return <>{children}</>;
 }

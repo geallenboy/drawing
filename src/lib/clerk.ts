@@ -1,6 +1,6 @@
 'use server';
 
-import { getUserByClerkId } from "@/services/user/user-service";
+import { getUserById } from "@/services/user/user-service";
 import { auth } from "@clerk/nextjs/server"
 
 export async function getCurrentUser({ url = "" }: { url?: string }) {
@@ -11,15 +11,15 @@ export async function getCurrentUser({ url = "" }: { url?: string }) {
 
     if (userId !== null) {
       try {
-        const user = await getUserByClerkId(userId)
-
-        if (!user) {
-          console.log(`User with Clerk ID ${userId} not found in database. This may be due to a webhook delay or database connection issue.`)
-        } else {
+        const result = await getUserById(userId)
+        
+        if (result.success && result.user) {
           console.log(`Successfully retrieved user data for Clerk ID ${userId}`)
+          return result.user
+        } else {
+          console.log(`User with Clerk ID ${userId} not found in database. This may be due to a webhook delay or database connection issue.`)
+          return null
         }
-
-        return user
       } catch (error) {
         console.error(`Error fetching user with Clerk ID ${userId}:`, error)
         return null

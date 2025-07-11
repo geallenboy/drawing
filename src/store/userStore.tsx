@@ -1,10 +1,10 @@
-import { AIUser } from "@/drizzle/schema";
+import { User } from "@/drizzle/schemas";
 import { create } from "zustand";
 
 interface UserState {
-  user: AIUser | null;
+  user: User | null;
   isLoading: boolean;
-  setUser: (user: AIUser | null) => void;
+  setUser: (user: User | null) => void;
   setLoading: (isLoading: boolean) => void;
 }
 

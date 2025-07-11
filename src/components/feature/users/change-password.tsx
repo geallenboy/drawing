@@ -19,7 +19,7 @@ import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 // import { changePasswordAction } from "@/app/actions/auth-actions";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+
 const passwordValidationRegex = new RegExp(
   "^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{8,})"
 );
@@ -28,23 +28,23 @@ export const ChangePassword = () => {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const toastId = useId();
-  const changePasswordT = useTranslations("account.changePassword");
+  
   const formSchema = z
     .object({
       password: z
         .string()
         .min(8, {
-          message: changePasswordT("passwordMessage"),
+          message: "密码至少需要8个字符",
         })
         .regex(passwordValidationRegex, {
-          message: changePasswordT("passwordRegex"),
+          message: "密码必须包含大小写字母、数字和特殊字符",
         }),
       confirmPassword: z.string({
-        required_error: changePasswordT("passwordConfirmPassword"),
+        required_error: "请确认密码",
       }),
     })
     .refine((data) => data.password === data.confirmPassword, {
-      message: changePasswordT("passwordRefine"),
+      message: "两次输入的密码不一致",
       path: ["confirmPassword"],
     });
   const form = useForm<z.infer<typeof formSchema>>({
@@ -55,7 +55,7 @@ export const ChangePassword = () => {
     },
   });
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    toast.loading(changePasswordT("infoLoading"), { id: toastId });
+    toast.loading("正在修改密码...", { id: toastId });
     setLoading(true);
 
     // try {
@@ -64,7 +64,7 @@ export const ChangePassword = () => {
     //     toast.error(String(error), { id: toastId });
     //     setLoading(false);
     //   } else {
-    //     toast.success(changePasswordT("infoSuccess"), { id: toastId });
+    //     toast.success("密码修改成功", { id: toastId });
     //     setLoading(false);
     //     router.push("/dashboard");
     //   }
@@ -78,10 +78,10 @@ export const ChangePassword = () => {
     <div className={cn("grid gap-6")}>
       <div className="flex flex-col space-y-2 text-center">
         <h1 className="text-2xl font-semibold tracking-tight">
-          {changePasswordT("name")}
+          修改密码
         </h1>
         <p className="text-sm text-muted-foreground">
-          {changePasswordT("desc")}
+          请输入您的新密码
         </p>
       </div>
       <Form {...form}>
@@ -91,12 +91,12 @@ export const ChangePassword = () => {
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel> {changePasswordT("password")}</FormLabel>
+                <FormLabel>新密码</FormLabel>
                 <FormControl>
                   <Input type={"password"} {...field} />
                 </FormControl>
                 <FormDescription>
-                  {changePasswordT("passwordDesc")}
+                  密码必须包含至少8个字符，包括大小写字母、数字和特殊字符
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -107,12 +107,12 @@ export const ChangePassword = () => {
             name="confirmPassword"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{changePasswordT("confirmPassword")}</FormLabel>
+                <FormLabel>确认密码</FormLabel>
                 <FormControl>
                   <Input type={"password"} {...field} />
                 </FormControl>
                 <FormDescription>
-                  {changePasswordT("confirmPasswordDesc")}
+                  请再次输入相同的密码进行确认
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -120,12 +120,10 @@ export const ChangePassword = () => {
           />
           <Button type="submit" className="w-full p-4">
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {loading
-              ? changePasswordT("loading1")
-              : changePasswordT("loading2")}
+            {loading ? "正在修改..." : "修改密码"}
           </Button>
           <div className="text-center text-sm text-muted-foreground">
-            {changePasswordT("info")}
+            修改密码后您需要重新登录
           </div>
         </form>
       </Form>

@@ -22,7 +22,7 @@ export const NavMain = () => {
       icon: Home
     },
     {
-      title: "绘图",
+      title: "画图",
       url: "/drawing", 
       icon: PenTool
     },

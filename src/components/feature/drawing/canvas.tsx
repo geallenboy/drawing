@@ -33,7 +33,7 @@ const Canvas = ({
           }
         }
       } catch (error) {
-        console.error("保存绘图数据失败:", error);
+        console.error("保存画图数据失败:", error);
         toast.error("数据更新失败!");
       }
     };

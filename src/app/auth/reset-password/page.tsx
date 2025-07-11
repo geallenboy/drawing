@@ -81,7 +81,7 @@ export default function ResetPasswordPage() {
         toast.success('密码重置成功！');
         // 延迟跳转，让用户看到成功消息
         setTimeout(() => {
-          router.push('/dashboard');
+          router.push('/');
         }, 2000);
       } else {
         setError('重置失败，请检查验证码和密码');
@@ -102,7 +102,7 @@ export default function ResetPasswordPage() {
             break;
           case 'session_exists':
             setError('您已登录，正在跳转...');
-            router.push('/dashboard');
+            router.push('/');
             break;
           default:
             setError(err.errors[0].message || '重置密码失败，请重试');
@@ -146,7 +146,7 @@ export default function ResetPasswordPage() {
                 密码重置成功
               </CardTitle>
               <CardDescription>
-                您的密码已成功重置，正在自动登录并跳转到仪表板...
+                您的密码已成功重置，正在自动登录并跳转到工作台...
               </CardDescription>
             </CardHeader>
             <CardContent className="text-center">

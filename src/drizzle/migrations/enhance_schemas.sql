@@ -38,7 +38,7 @@ CREATE INDEX IF NOT EXISTS idx_folder_share_token ON folder(share_token);
 CREATE INDEX IF NOT EXISTS idx_folder_sort_order ON folder(sort_order);
 
 -- =====================================================
--- 3. 创建绘图版本历史表
+-- 3. 创建画图版本历史表
 -- =====================================================
 
 CREATE TABLE IF NOT EXISTS drawing_versions (
@@ -58,7 +58,7 @@ CREATE INDEX IF NOT EXISTS idx_drawing_versions_drawing_id ON drawing_versions(d
 CREATE INDEX IF NOT EXISTS idx_drawing_versions_created_at ON drawing_versions(created_at);
 
 -- =====================================================
--- 4. 创建绘图协作表
+-- 4. 创建画图协作表
 -- =====================================================
 
 CREATE TABLE IF NOT EXISTS drawing_collaborators (
@@ -220,7 +220,7 @@ CREATE TRIGGER update_user_preferences_updated_at
 -- 11. 初始化数据
 -- =====================================================
 
--- 为现有绘图初始化版本号
+-- 为现有画图初始化版本号
 UPDATE drawing SET version = 1 WHERE version IS NULL;
 
 -- 为现有文件夹设置默认颜色
@@ -229,7 +229,7 @@ UPDATE folder SET icon = 'folder' WHERE icon IS NULL;
 
 -- 创建默认标签
 INSERT INTO tags (name, color, description, created_by) VALUES 
-    ('设计', '#EF4444', '设计相关的绘图', 'system'),
+    ('设计', '#EF4444', '设计相关的画图', 'system'),
     ('草图', '#F97316', '快速草图和想法', 'system'),
     ('协作', '#10B981', '团队协作项目', 'system'),
     ('个人', '#6366F1', '个人创作', 'system'),
@@ -283,8 +283,8 @@ ANALYZE user_preferences;
 ANALYZE notifications;
 
 -- 添加注释
-COMMENT ON TABLE drawing_versions IS '绘图版本历史记录表';
-COMMENT ON TABLE drawing_collaborators IS '绘图协作者权限管理表';
+COMMENT ON TABLE drawing_versions IS '画图版本历史记录表';
+COMMENT ON TABLE drawing_collaborators IS '画图协作者权限管理表';
 COMMENT ON TABLE tags IS '标签管理表';
 COMMENT ON TABLE user_activities IS '用户活动日志表';
 COMMENT ON TABLE file_shares IS '文件分享管理表';

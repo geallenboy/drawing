@@ -6,7 +6,7 @@ export const AIDTDrawingTable = pgTable("drawing", {
     id,
     name: text().notNull(),
     desc: text().notNull().default(""),
-    // 绘图内容 - 存储SVG、Canvas数据或其他格式
+    // 画图内容 - 存储SVG、Canvas数据或其他格式
     data: jsonb("data").$type<any[]>().notNull().default([]),
     // 创建者/所有者
     userId: text().notNull(),

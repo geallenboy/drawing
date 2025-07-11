@@ -27,7 +27,7 @@ export default function SSOCallbackPage() {
         // 登录成功，延迟跳转确保状态稳定
         console.log('OAuth登录成功，用户ID:', userId);
         setTimeout(() => {
-          router.push('/dashboard');
+          router.push('/');
         }, 1000);
       } else if (timeoutReached) {
         // 超时未完成登录，认为失败
@@ -82,7 +82,7 @@ export default function SSOCallbackPage() {
           </CardHeader>
           <CardContent className="text-center">
             <p className="text-muted-foreground mb-4">
-              欢迎回来，正在跳转到仪表板...
+              欢迎回来，正在跳转到工作台...
             </p>
             <Loader2 className="h-6 w-6 animate-spin mx-auto" />
           </CardContent>

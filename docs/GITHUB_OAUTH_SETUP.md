@@ -29,9 +29,9 @@ GitHub登录失败并返回到SSO回调页面通常由以下原因导致：
 
 2. **配置OAuth应用**:
    ```
-   Application name: AI TextDraw (或您选择的名称)
+   Application name: Drawing (或您选择的名称)
    Homepage URL: http://localhost:3001 (开发环境)
-   Application description: AI TextDraw应用的GitHub登录
+   Application description: Drawing应用的GitHub登录
    Authorization callback URL: https://eternal-squid-90.clerk.accounts.dev/v1/oauth_callback
    ```
 

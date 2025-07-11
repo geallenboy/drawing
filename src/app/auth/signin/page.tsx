@@ -45,7 +45,7 @@ export default function SignInPage() {
   // 检查用户是否已登录，如果已登录则重定向
   useEffect(() => {
     if (isSignedIn) {
-      router.push('/dashboard');
+      router.push('/');
     }
   }, [isSignedIn, router]);
 
@@ -65,7 +65,7 @@ export default function SignInPage() {
       if (result.status === 'complete') {
         await setActive({ session: result.createdSessionId });
         toast.success('登录成功！');
-        router.push('/dashboard');
+        router.push('/');
       } else if (result.status === 'needs_first_factor') {
         // 需要第一个验证因子，通常是密码
         setError('需要完成身份验证');
@@ -91,7 +91,7 @@ export default function SignInPage() {
             break;
           case 'session_exists':
             setError('您已登录，正在跳转...');
-            router.push('/dashboard');
+            router.push('/');
             break;
           default:
             setError(err.errors[0].message || '登录失败，请重试');
@@ -114,7 +114,7 @@ export default function SignInPage() {
       await signIn.authenticateWithRedirect({
         strategy: provider,
         redirectUrl: `${window.location.origin}/auth/sso-callback`,
-        redirectUrlComplete: `${window.location.origin}/dashboard`,
+        redirectUrlComplete: `${window.location.origin}/`,
       });
     } catch (err: any) {
       console.error('OAuth 错误:', err);

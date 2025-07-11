@@ -1,17 +1,35 @@
 import type { Metadata } from "next";
+import { Inter } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
-import { Nunito } from "next/font/google";
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import { ThemeProvider } from "@/components/custom/theme-provider";
 import Provider from "@/app/provider";
 
-const MyAppFont = Nunito({ subsets: ["latin"] });
+const inter = Inter({ 
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
-  title: "AI TextDraw",
-  description:
-    "是一个简洁、直观且易记的产品名称，非常适合描述一个结合文本编辑（Text）和绘图（Draw）功能的产品"
+  title: "Drawing - 重新定义创意画图体验",
+  description: "Drawing 结合了智能文本编辑和强大画图功能，为创作者提供无与伦比的创作体验。简洁直观，让创意自由流淌。",
+  keywords: ["AI画图", "文本编辑", "创意工具", "在线画图", "智能创作"],
+  authors: [{ name: "Drawing Team" }],
+  viewport: "width=device-width, initial-scale=1",
+  robots: "index, follow",
+  openGraph: {
+    type: "website",
+    title: "Drawing - 重新定义创意画图体验",
+    description: "Drawing 结合了智能文本编辑和强大画图功能，为创作者提供无与伦比的创作体验。",
+    siteName: "Drawing",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Drawing - 重新定义创意画图体验",
+    description: "Drawing 结合了智能文本编辑和强大画图功能，为创作者提供无与伦比的创作体验。",
+  }
 };
 
 export default async function RootLayout({
@@ -20,18 +38,29 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="zh-CN" suppressHydrationWarning>
-      <body className={`${MyAppFont.className} font-sans`}>
+    <html lang="zh-CN" suppressHydrationWarning className={inter.variable}>
+      <body className={`${inter.className} font-sans antialiased`}>
         <ClerkProvider>
           <Provider>
-          <ThemeProvider
+            <ThemeProvider
               attribute="class"
               defaultTheme="system"
-              enableSystem={false}
+              enableSystem
               disableTransitionOnChange
             >
               {children}
-              <Toaster richColors />
+              <Toaster 
+                richColors 
+                position="top-right"
+                toastOptions={{
+                  duration: 4000,
+                  style: {
+                    background: 'hsl(var(--background))',
+                    color: 'hsl(var(--foreground))',
+                    border: '1px solid hsl(var(--border))',
+                  },
+                }}
+              />
             </ThemeProvider>
           </Provider>
         </ClerkProvider>

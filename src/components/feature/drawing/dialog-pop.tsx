@@ -69,7 +69,7 @@ const DialogPop = ({ currentFolderId }: { currentFolderId?: string | null }) => 
     e.preventDefault();
     
     if (!name.trim()) {
-      toast.error("请输入绘图名称");
+      toast.error("请输入画图名称");
       return;
     }
 
@@ -90,17 +90,17 @@ const DialogPop = ({ currentFolderId }: { currentFolderId?: string | null }) => 
       });
 
       if (success && data?.drawing) {
-        toast.success("绘图创建成功！");
+        toast.success("画图创建成功！");
         setOpen(false);
         setName("");
         setDescription("");
         router.push(`/drawing/${data.drawing.id}`);
       } else {
-        toast.error(error || "创建绘图失败");
+        toast.error(error || "创建画图失败");
       }
     } catch (err) {
-      console.error("创建绘图时发生错误:", err);
-      toast.error("创建绘图失败，请重试");
+      console.error("创建画图时发生错误:", err);
+      toast.error("创建画图失败，请重试");
     } finally {
       setLoading(false);
     }
@@ -119,7 +119,7 @@ const DialogPop = ({ currentFolderId }: { currentFolderId?: string | null }) => 
 
   const generateRandomName = () => {
     const adjectives = ["创意", "惊艳", "优雅", "精美", "现代", "简约", "炫酷", "温馨"];
-    const nouns = ["绘图", "设计", "作品", "创作", "艺术", "画作"];
+    const nouns = ["画图", "设计", "作品", "创作", "艺术", "画作"];
     const randomAdj = adjectives[Math.floor(Math.random() * adjectives.length)];
     const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
     const timestamp = new Date().toLocaleString('zh-CN', {
@@ -138,13 +138,13 @@ const DialogPop = ({ currentFolderId }: { currentFolderId?: string | null }) => 
         <Button
           className="gap-2 flex text-sm h-8 hover:bg-blue-700 bg-blue-600 transition-colors"
         >
-          <FolderPlus className="h-4 w-4" /> 创建绘图
+          <FolderPlus className="h-4 w-4" /> 创建画图
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[480px]">
-        <DialogTitle className="text-xl font-semibold">创建新绘图</DialogTitle>
+        <DialogTitle className="text-xl font-semibold">创建新画图</DialogTitle>
         <DialogDescription className="text-gray-600">
-          为您的新绘图设置名称和描述，然后开始创作吧！
+          为您的新画图设置名称和描述，然后开始创作吧！
         </DialogDescription>
         
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -152,7 +152,7 @@ const DialogPop = ({ currentFolderId }: { currentFolderId?: string | null }) => 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="name" className="text-sm font-medium">
-                  绘图名称 <span className="text-red-500">*</span>
+                  画图名称 <span className="text-red-500">*</span>
                 </Label>
                 <Button
                   type="button"
@@ -169,7 +169,7 @@ const DialogPop = ({ currentFolderId }: { currentFolderId?: string | null }) => 
                 id="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="请输入绘图名称..."
+                placeholder="请输入画图名称..."
                 className="w-full"
                 disabled={loading}
                 maxLength={50}
@@ -187,7 +187,7 @@ const DialogPop = ({ currentFolderId }: { currentFolderId?: string | null }) => 
                 id="description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="描述一下这个绘图的用途或内容..."
+                placeholder="描述一下这个画图的用途或内容..."
                 className="w-full resize-none"
                 rows={3}
                 disabled={loading}
@@ -240,7 +240,7 @@ const DialogPop = ({ currentFolderId }: { currentFolderId?: string | null }) => 
               className="min-w-[100px]"
             >
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {loading ? "创建中..." : "创建绘图"}
+              {loading ? "创建中..." : "创建画图"}
             </Button>
           </DialogFooter>
         </form>

@@ -1,21 +1,21 @@
 "use client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Save, ArrowLeft } from "lucide-react";
+import { Save, ArrowLeft, Palette } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { getDrawingWithDataAction, updateDrawingAction } from "@/actions/drawing/drawing-action";
 import { useBeforeUnload } from "react-use";
 import SaveStatusIndicator, { SaveStatus } from "@/components/custom/save-status-indicator";
+import { useTheme } from "next-themes";
 
 // 本地存储键前缀
 const STORAGE_KEY_PREFIX = "drawing_autosave_";
 // 自动保存到数据库的间隔 (30秒)
-const AUTO_SAVE_INTERVAL = 300000;
+const AUTO_SAVE_INTERVAL = 30000;
 // 自动保存到本地的间隔 (10秒)
-const LOCAL_SAVE_INTERVAL = 100000;
+const LOCAL_SAVE_INTERVAL = 10000;
 // 草稿过期时间 (24小时)
 const DRAFT_EXPIRY_HOURS = 24;
 
@@ -24,9 +24,9 @@ const Excalidraw = dynamic(() => import("@excalidraw/excalidraw").then((mod) => 
 });
 
 const DrawingWorkspace = () => {
-  const [inputVal, setInputVal] = useState("");
   const params = useParams();
   const router = useRouter();
+  const { resolvedTheme } = useTheme();
   const id = (params.id || "") as string;
   const [excalidrawData, setExcalidrawData] = useState<any[]>([]);
   const [drawingData, setDrawingData] = useState<any>();
@@ -39,7 +39,7 @@ const DrawingWorkspace = () => {
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // 当用户想要离开页面时，如果有未保存的更改，显示确认对话框
-  useBeforeUnload(isDirty, "您有未保存的绘图更改，确定要离开吗？");
+  useBeforeUnload(isDirty, "您有未保存的画图更改，确定要离开吗？");
 
   // 从本地存储中加载草稿
   const loadDraft = useCallback(() => {
@@ -89,7 +89,7 @@ const DrawingWorkspace = () => {
     [id]
   );
 
-  // 获取绘图数据或从本地存储中恢复
+  // 获取画图数据或从本地存储中恢复
   const getDrawingData = useCallback(async () => {
     try {
       const { data, success } = await getDrawingWithDataAction(id);
@@ -107,25 +107,22 @@ const DrawingWorkspace = () => {
 
           if (draftDate > serverDate) {
             const shouldRestore = window.confirm(
-              `发现本地保存的绘图草稿 (${draftDate.toLocaleString()}), 比服务器版本 (${serverDate.toLocaleString()}) 更新。是否恢复草稿？`
+              `发现本地保存的画图草稿 (${draftDate.toLocaleString()}), 比服务器版本 (${serverDate.toLocaleString()}) 更新。是否恢复草稿？`
             );
 
             if (shouldRestore) {
               setDrawingData(serverData);
               setExcalidrawData(draft.data || []);
-              setInputVal(draft.name);
               toast.info("已恢复本地草稿");
             } else {
               localStorage.removeItem(`${STORAGE_KEY_PREFIX}${id}`);
               setDrawingData(serverData);
               setExcalidrawData(Array.isArray(serverData.data) ? serverData.data : []);
-              setInputVal(serverData.name);
             }
           } else {
             // 服务器数据较新
             setDrawingData(serverData);
             setExcalidrawData(Array.isArray(serverData.data) ? serverData.data : []);
-            setInputVal(serverData.name);
             // 清除较旧的草稿
             localStorage.removeItem(`${STORAGE_KEY_PREFIX}${id}`);
           }
@@ -133,20 +130,18 @@ const DrawingWorkspace = () => {
           // 没有草稿，使用服务器数据
           setDrawingData(serverData);
           setExcalidrawData(Array.isArray(serverData.data) ? serverData.data : []);
-          setInputVal(serverData.name);
         }
       } else if (draft) {
         // 如果服务器数据获取失败但有本地草稿，使用草稿
         toast.info("使用本地保存的草稿");
         setDrawingData(data.drawing || {});
         setExcalidrawData(draft.data || []);
-        setInputVal(draft.name);
       } else {
         setDrawingData({});
         setExcalidrawData([]);
       }
     } catch (error) {
-      console.error("获取绘图数据失败:", error);
+      console.error("获取画图数据失败:", error);
 
       // 尝试使用本地草稿
       const draft = loadDraft();
@@ -154,7 +149,6 @@ const DrawingWorkspace = () => {
         toast.info("使用本地保存的草稿");
         setDrawingData({});
         setExcalidrawData(draft.data || []);
-        setInputVal(draft.name);
       }
     }
   }, [id, loadDraft]);
@@ -166,7 +160,9 @@ const DrawingWorkspace = () => {
   // 更新引用值
   useEffect(() => {
     dataRef.current = excalidrawData;
-  }, [excalidrawData]);  // 节流保存到数据库
+  }, [excalidrawData]);
+
+  // 节流保存到数据库
   const saveToDatabase = useCallback(
     async (drawingElements: any[], name: string) => {
       if (!drawingData || !drawingData.id) return;
@@ -216,14 +212,14 @@ const DrawingWorkspace = () => {
     saveTimeoutRef.current = setTimeout(async () => {
       if (isDirty && dataRef.current.length > 0) {
         try {
-          await saveToDatabase(dataRef.current, inputVal);
-          toast.success("绘图已自动保存");
+          await saveToDatabase(dataRef.current, drawingData?.name || "未命名画图");
+          toast.success("画图已自动保存");
         } catch (error) {
           console.error("自动保存失败:", error);
         }
       }
     }, AUTO_SAVE_INTERVAL);
-  }, [isDirty, inputVal, saveToDatabase]);
+  }, [isDirty, drawingData?.name, saveToDatabase]);
 
   // 当内容变为脏状态时，设置自动保存
   useEffect(() => {
@@ -243,18 +239,18 @@ const DrawingWorkspace = () => {
     // 定期保存本地草稿
     const draftInterval = setInterval(() => {
       if (isDirty && dataRef.current.length > 0) {
-        saveDraft(dataRef.current, inputVal);
+        saveDraft(dataRef.current, drawingData?.name || "未命名画图");
       }
     }, LOCAL_SAVE_INTERVAL);
 
     return () => clearInterval(draftInterval);
-  }, [isDirty, inputVal, saveDraft]);
+  }, [isDirty, drawingData?.name, saveDraft]);
 
   // 页面卸载前保存
   useEffect(() => {
     const handleBeforeUnload = () => {
       if (isDirty && dataRef.current.length > 0) {
-        saveDraft(dataRef.current, inputVal);
+        saveDraft(dataRef.current, drawingData?.name || "未命名画图");
       }
     };
 
@@ -264,10 +260,10 @@ const DrawingWorkspace = () => {
 
       // 卸载时自动保存到本地
       if (dataRef.current.length > 0) {
-        saveDraft(dataRef.current, inputVal);
+        saveDraft(dataRef.current, drawingData?.name || "未命名画图");
       }
     };
-  }, [inputVal, isDirty, saveDraft]);
+  }, [drawingData?.name, isDirty, saveDraft]);
 
   const onSave = async () => {
     if (excalidrawData.length > 0 && drawingData && drawingData.id) {
@@ -276,42 +272,37 @@ const DrawingWorkspace = () => {
         setSaveError('');
         
         // 立即保存到本地存储作为备份
-        saveDraft(excalidrawData, inputVal);
+        saveDraft(excalidrawData, drawingData?.name || "未命名画图");
 
         // 保存到数据库
         const { success, error } = await updateDrawingAction(drawingData.id, {
           ...drawingData,
-          name: inputVal,
+          name: drawingData?.name || "未命名画图",
           data: excalidrawData
         });
 
         if (success) {
-          toast.success("绘图保存成功!");
+          toast.success("画图保存成功!");
           setIsDirty(false);
           setLastSaveTime(new Date());
           setSaveStatus('saved');
           // 成功保存到服务器后，可以删除本地草稿
           localStorage.removeItem(`${STORAGE_KEY_PREFIX}${id}`);
         } else {
-          toast.error("绘图保存失败! 已保存到本地草稿");
+          toast.error("画图保存失败! 已保存到本地草稿");
           setSaveStatus('error');
           setSaveError(error || '保存失败');
         }
       } catch (error) {
         console.error("保存出错:", error);
-        toast.error("绘图保存失败! 尝试保存到本地");
-        saveDraft(excalidrawData, inputVal);
+        toast.error("画图保存失败! 尝试保存到本地");
+        saveDraft(excalidrawData, drawingData?.name || "未命名画图");
         setSaveStatus('error');
         setSaveError(error instanceof Error ? error.message : '保存失败');
       }
     } else {
-      toast.error("没有可保存的绘图数据或缺少必要信息");
+      toast.error("没有可保存的画图数据或缺少必要信息");
     }
-  };
-
-  const inputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputVal(e.target.value);
-    setIsDirty(true); // 标记为已修改
   };
 
   const handleExcalidrawChange = (elements: any) => {
@@ -356,25 +347,28 @@ const DrawingWorkspace = () => {
   }, [isDirty, excalidrawData, onSave]);
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-4">
-        {/* 左侧：返回按钮和标题输入 */}
-        <div className="flex items-center gap-3 flex-1 max-w-md">
+    <div className="h-screen flex flex-col bg-background">
+      {/* 优化的头部导航 */}
+      <div className="flex items-center justify-between p-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        {/* 左侧：返回按钮和标题 */}
+        <div className="flex items-center gap-3">
           <Button
             variant="ghost"
             size="sm"
             onClick={handleGoBack}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 hover:bg-accent"
           >
             <ArrowLeft className="h-4 w-4" />
             返回
           </Button>
-          <Input
-            value={inputVal}
-            onChange={inputChange}
-            className="flex-1"
-            placeholder="绘图标题"
-          />
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 bg-gradient-primary rounded flex items-center justify-center">
+              <Palette className="w-3 h-3 text-white" />
+            </div>
+            <h1 className="text-lg font-semibold text-foreground">
+              {drawingData?.name || "画图详情"}
+            </h1>
+          </div>
         </div>
         
         {/* 右侧：保存相关控件 */}
@@ -387,12 +381,12 @@ const DrawingWorkspace = () => {
           />
           
           {/* 快捷键提示 */}
-          <div className="text-xs text-gray-400 hidden sm:block">
+          <div className="text-xs text-muted-foreground hidden sm:block">
             Ctrl+S 保存
           </div>
           
           <Button
-            className="h-8 text-[12px] gap-2 bg-yellow-500 hover:bg-yellow-600 disabled:opacity-50"
+            className="h-9 text-sm gap-2 bg-primary hover:bg-primary/90 disabled:opacity-50"
             onClick={onSave}
             disabled={!isDirty || !excalidrawData.length || saveStatus === 'saving'}
           >
@@ -402,11 +396,12 @@ const DrawingWorkspace = () => {
         </div>
       </div>
 
-      <div className="h-[88vh]">
+      {/* 绘图画布区域 - 占满剩余空间 */}
+      <div className="flex-1 relative">
         {drawingData && (
           <Excalidraw
             langCode="zh-CN"
-            theme="light"
+            theme={resolvedTheme === "dark" ? "dark" : "light"}
             initialData={{
               elements: Array.isArray(excalidrawData) ? excalidrawData : []
             }}
@@ -426,4 +421,4 @@ const DrawingWorkspace = () => {
   );
 };
 
-export default DrawingWorkspace;
+export default DrawingWorkspace; 

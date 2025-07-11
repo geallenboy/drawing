@@ -1,41 +1,58 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-import { Search, Grid3X3, List, Plus, Home, ChevronRight, Settings } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "next/navigation";
+import { 
+  Folder,
+  ArrowLeft,
+  Plus
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import Header from "./header";
+import { useUser } from "@clerk/nextjs";
 import DrawingList from "./drawing-list";
-import FolderNavigation from "./folder-navigation";
-import FolderGrid from "./folder-grid";
+import FolderGrid, { FolderGridRef } from "./folder-grid";
+import { WelcomeGuide } from "@/components/custom/welcome-guide";
+import { createFolder } from "@/actions/folder/folder-actions";
+import DialogPop from "./dialog-pop";
 
-type ViewMode = "grid" | "list";
 
 const CanvasContent = () => {
-  const [searchQuery, setSearchQuery] = useState("");
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
+  const [currentFolderName, setCurrentFolderName] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [initialized, setInitialized] = useState(false);
-  const [viewMode, setViewMode] = useState<ViewMode>("grid");
+  const [isCreatingDefaultFolder, setIsCreatingDefaultFolder] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(false);
+  const [hasNoFolders, setHasNoFolders] = useState(false);
+  
+  // 新建文件夹对话框状态
+  const [createFolderDialogOpen, setCreateFolderDialogOpen] = useState(false);
+  const [newFolderName, setNewFolderName] = useState("");
+  const [newFolderDesc, setNewFolderDesc] = useState("");
+  const [isCreatingFolder, setIsCreatingFolder] = useState(false);
+  
   const searchParams = useSearchParams();
-  const router = useRouter();
 
-  // 初始化：确保默认文件夹存在
+  const { user } = useUser();
+
+  // FolderGrid 的 ref
+  const folderGridRef = useRef<FolderGridRef>(null);
+
+  // 初始化应用和创建默认文件夹
   useEffect(() => {
     const initializeApp = async () => {
       try {
-        // 从 URL 参数中获取文件夹ID
         const folderParam = searchParams.get("folder");
         
         if (folderParam) {
           setCurrentFolderId(folderParam);
         }
-        // 从本地存储恢复视图模式
-        const savedViewMode = localStorage.getItem("file-manager-view-mode") as ViewMode;
-        if (savedViewMode) {
-          setViewMode(savedViewMode);
-        }
+        
+        // 检查用户是否有文件夹
+        await checkUserFolders();
       } catch (error) {
         console.error("初始化应用失败:", error);
         toast.error("初始化应用失败");
@@ -44,225 +61,256 @@ const CanvasContent = () => {
       }
     };
 
-    initializeApp();
-  }, [searchParams]);
+    if (user) {
+      initializeApp();
+    }
+  }, [searchParams, user]);
 
-  // 处理文件夹选择
-  const handleFolderSelect = (folderId: string) => {
+  // 检查用户文件夹
+  const checkUserFolders = async () => {
+    if (!user || isCreatingDefaultFolder) return;
+    
+    try {
+      const { getFolders } = await import("@/actions/folder/folder-actions");
+      const result = await getFolders();
+      
+      if (result.success) {
+        const folders = result.folders || [];
+        if (folders.length === 0) {
+          setHasNoFolders(true);
+          setShowWelcome(true);
+        } else {
+          setHasNoFolders(false);
+          setShowWelcome(false);
+        }
+      }
+    } catch (error) {
+      console.error("检查用户文件夹失败:", error);
+    }
+  };
+
+  // 创建新文件夹
+  const handleCreateFolder = async () => {
+    if (!newFolderName.trim()) {
+      toast.error("请输入文件夹名称");
+      return;
+    }
+
+    setIsCreatingFolder(true);
+    try {
+      const result = await createFolder(newFolderName.trim(), newFolderDesc.trim());
+      
+      if (result.success) {
+        toast.success("文件夹创建成功！");
+        setCreateFolderDialogOpen(false);
+        setNewFolderName("");
+        setNewFolderDesc("");
+        await checkUserFolders();
+        // 刷新 FolderGrid 的数据
+        folderGridRef.current?.refreshFolders();
+      } else {
+        toast.error(result.error || "创建文件夹失败");
+      }
+    } catch (error) {
+      console.error("创建文件夹失败:", error);
+      toast.error("创建文件夹失败");
+    } finally {
+      setIsCreatingFolder(false);
+    }
+  };
+
+  // 打开创建文件夹对话框
+  const openCreateFolderDialog = () => {
+    setNewFolderName("");
+    setNewFolderDesc("");
+    setCreateFolderDialogOpen(true);
+  };
+
+  // 文件夹选择处理
+  const handleFolderSelect = (folderId: string, folderName: string) => {
     setCurrentFolderId(folderId);
-    // 更新 URL
-    const url = folderId ? `/?folder=${folderId}` : "/";
-    router.push(url);
+    setCurrentFolderName(folderName);
+    
+    // 更新URL但不触发导航
+    const url = new URL(window.location.href);
+    url.searchParams.set("folder", folderId);
+    window.history.pushState({}, "", url.toString());
   };
 
-  // 处理视图模式切换
-  const handleViewModeChange = (mode: ViewMode) => {
-    setViewMode(mode);
-    localStorage.setItem("file-manager-view-mode", mode);
-  };
-
-  // 清除搜索
-  const clearSearch = () => {
-    setSearchQuery("");
+  // 返回文件夹列表
+  const handleBackToFolders = () => {
+    setCurrentFolderId(null);
+    setCurrentFolderName("");
+    
+    // 清除URL参数
+    const url = new URL(window.location.href);
+    url.searchParams.delete("folder");
+    window.history.pushState({}, "", url.toString());
   };
 
   if (!initialized) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">正在初始化应用...</p>
-        </div>
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen bg-background">
-      {/* 改进的顶部导航栏 */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <h1 className="text-2xl font-bold text-gray-900">我的绘图</h1>
-              <Badge variant="secondary">
-                文件管理器
-              </Badge>
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              {/* 改进的搜索框 */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+  // 显示欢迎引导 - 让用户自己创建文件夹，不提供默认文件夹
+  if (showWelcome && hasNoFolders) {
+    return (
+      <>
+        <WelcomeGuide
+          onGetStarted={openCreateFolderDialog}
+        />
+        {/* 确保对话框也在欢迎页面渲染 */}
+        <Dialog open={createFolderDialogOpen} onOpenChange={setCreateFolderDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>创建新文件夹</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="welcome-folder-name">文件夹名称</Label>
                 <Input
-                  placeholder="搜索文件夹和绘图..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 w-80"
+                  id="welcome-folder-name"
+                  value={newFolderName}
+                  onChange={(e) => setNewFolderName(e.target.value)}
+                  placeholder="请输入文件夹名称"
+                  disabled={isCreatingFolder}
                 />
-                {searchQuery && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
-                    onClick={clearSearch}
-                  >
-                    ×
-                  </Button>
-                )}
               </div>
-
-              {/* 视图模式切换 */}
-              <div className="flex border rounded-lg">
-                <Button
-                  variant={viewMode === "grid" ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => handleViewModeChange("grid")}
-                  className="rounded-r-none"
-                >
-                  <Grid3X3 className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant={viewMode === "list" ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => handleViewModeChange("list")}
-                  className="rounded-l-none"
-                >
-                  <List className="w-4 h-4" />
-                </Button>
+              <div>
+                <Label htmlFor="welcome-folder-desc">描述（可选）</Label>
+                <Input
+                  id="welcome-folder-desc"
+                  value={newFolderDesc}
+                  onChange={(e) => setNewFolderDesc(e.target.value)}
+                  placeholder="请输入文件夹描述"
+                  disabled={isCreatingFolder}
+                />
               </div>
             </div>
-          </div>
+            <DialogFooter>
+              <Button 
+                variant="outline" 
+                onClick={() => setCreateFolderDialogOpen(false)}
+                disabled={isCreatingFolder}
+              >
+                取消
+              </Button>
+              <Button 
+                onClick={handleCreateFolder}
+                disabled={isCreatingFolder || !newFolderName.trim()}
+              >
+                {isCreatingFolder ? "创建中..." : "创建"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </>
+    );
+  }
 
+  return (
+    <div className="space-y-6">
+      {/* 页面头部 */}
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+        <div className="flex items-center space-x-4">
           {/* 面包屑导航 */}
-          <FolderNavigation 
-            currentFolderId={currentFolderId} 
-            setCurrentFolderId={handleFolderSelect}
-          />
+          {currentFolderId ? (
+            <div className="flex items-center space-x-2">
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={handleBackToFolders}
+                className="h-8 px-2"
+              >
+                <ArrowLeft className="w-4 h-4 mr-1" />
+                返回
+              </Button>
+              <span className="text-muted-foreground">/</span>
+              <div className="flex items-center space-x-2">
+                <Folder className="w-4 h-4 text-muted-foreground" />
+                <span className="font-medium">{currentFolderName}</span>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center space-x-2">
+              <Folder className="w-5 h-5 text-primary" />
+              <h1 className="text-xl font-semibold">我的文件夹</h1>
+            </div>
+          )}
+        </div>
+
+        {/* 右侧操作区 */}
+        <div className="flex items-center space-x-3">
+          {/* 创建按钮 */}
+          {currentFolderId && <DialogPop currentFolderId={currentFolderId} />}
         </div>
       </div>
-      
-      {/* 主要内容区域 */}
-      <div className="max-w-7xl mx-auto p-6 space-y-6">
-        {/* 文件夹区域 */}
-        <div className="bg-white rounded-lg border shadow-sm">
-          <div className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold flex items-center">
-                📁 文件夹
-              </h2>
-              <Button 
-                size="sm" 
-                onClick={() => {
-                  // 这里可以触发创建文件夹的逻辑
-                  toast.info("请使用下方的新建文件夹按钮");
-                }}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                快速创建
-              </Button>
-            </div>
-            <FolderGrid 
-              onFolderSelect={handleFolderSelect}
-              selectedFolderId={currentFolderId}
-            />
-          </div>
-        </div>
-        
-        {/* 绘图文件区域 */}
-        <div className="bg-white rounded-lg border shadow-sm">
-          <div className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold flex items-center">
-                🎨 
-                {currentFolderId ? "绘图文件" : "选择文件夹查看绘图"}
-              </h2>
-              {currentFolderId && (
-                <Button 
-                  size="sm"
-                  onClick={() => router.push(`/drawing/new?folder=${currentFolderId}`)}
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  新建绘图
-                </Button>
-              )}
-            </div>
-            
-            {!currentFolderId ? (
-              <div className="text-center py-12 bg-gray-50 rounded-lg">
-                <div className="text-6xl mb-4">📂</div>
-                <h3 className="text-lg font-medium text-gray-500 mb-2">
-                  请选择一个文件夹
-                </h3>
-                <p className="text-gray-400">
-                  在左侧选择文件夹以查看其中的绘图文件
-                </p>
-              </div>
-            ) : (
-              <DrawingList 
-                searchQuery={searchQuery} 
-                currentFolderId={currentFolderId}
-                onFolderClick={handleFolderSelect}
-              />
-            )}
-          </div>
-        </div>
 
-        {/* 快速操作面板 */}
-        {currentFolderId && (
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-medium text-blue-900">快速操作</h3>
-                <p className="text-sm text-blue-700">在此文件夹中快速创建内容</p>
-              </div>
-              <div className="flex space-x-2">
-                <Button 
-                  size="sm" 
-                  variant="outline"
-                  onClick={() => router.push(`/drawing/new?folder=${currentFolderId}&template=sketch`)}
-                >
-                  📝 快速草图
-                </Button>
-                <Button 
-                  size="sm" 
-                  variant="outline"
-                  onClick={() => router.push(`/drawing/new?folder=${currentFolderId}&template=design`)}
-                >
-                  🎨 设计项目
-                </Button>
-                <Button 
-                  size="sm" 
-                  variant="outline"
-                  onClick={() => router.push(`/drawing/new?folder=${currentFolderId}&template=collaboration`)}
-                >
-                  👥 协作画板
-                </Button>
-              </div>
-            </div>
-          </div>
+      {/* 主要内容区域 */}
+      <div className="min-h-[500px]">
+        {currentFolderId ? (
+          <DrawingList 
+            searchQuery={searchQuery} 
+            currentFolderId={currentFolderId}
+          />
+        ) : (
+          <FolderGrid 
+            ref={folderGridRef}
+            onFolderSelect={handleFolderSelect}
+            selectedFolderId={currentFolderId}
+          />
         )}
       </div>
 
-      {/* 底部状态栏 */}
-      <div className="bg-gray-50 border-t">
-        <div className="max-w-7xl mx-auto px-6 py-3">
-          <div className="flex items-center justify-between text-sm text-gray-500">
-            <div className="flex items-center space-x-4">
-              <span>视图模式: {viewMode === "grid" ? "网格" : "列表"}</span>
-              {searchQuery && (
-                <span>搜索: "{searchQuery}"</span>
-              )}
+      {/* 创建文件夹对话框 */}
+      <Dialog open={createFolderDialogOpen} onOpenChange={setCreateFolderDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>创建新文件夹</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="folder-name">文件夹名称</Label>
+              <Input
+                id="folder-name"
+                value={newFolderName}
+                onChange={(e) => setNewFolderName(e.target.value)}
+                placeholder="请输入文件夹名称"
+                disabled={isCreatingFolder}
+              />
             </div>
-            <div className="flex items-center space-x-4">
-              <span>快捷键: Ctrl+N 新建文件夹</span>
-              <Button variant="ghost" size="sm" className="h-6">
-                <Settings className="w-3 h-3" />
-              </Button>
+            <div>
+              <Label htmlFor="folder-desc">描述（可选）</Label>
+              <Input
+                id="folder-desc"
+                value={newFolderDesc}
+                onChange={(e) => setNewFolderDesc(e.target.value)}
+                placeholder="请输入文件夹描述"
+                disabled={isCreatingFolder}
+              />
             </div>
           </div>
-        </div>
-      </div>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setCreateFolderDialogOpen(false)}
+              disabled={isCreatingFolder}
+            >
+              取消
+            </Button>
+            <Button 
+              onClick={handleCreateFolder}
+              disabled={isCreatingFolder || !newFolderName.trim()}
+            >
+              {isCreatingFolder ? "创建中..." : "创建"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

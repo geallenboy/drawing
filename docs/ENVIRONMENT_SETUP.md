@@ -60,7 +60,7 @@ NODE_ENV=development
 ### GitHub OAuth配置
 1. **访问 [GitHub Developer Settings](https://github.com/settings/developers)**
 2. **创建OAuth App**：
-   - Application name: `AI TextDraw`
+   - Application name: `Drawing`
    - Homepage URL: `http://localhost:3000`
    - Authorization callback URL: `https://eternal-squid-90.clerk.accounts.dev/v1/oauth_callback`
 

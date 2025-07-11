@@ -46,7 +46,7 @@
 
 **配置参数**:
 ```
-Application name: AI TextDraw
+Application name: Drawing
 Homepage URL: http://localhost:3000 (开发环境)
 Authorization callback URL: https://eternal-squid-90.clerk.accounts.dev/v1/oauth_callback
 ```

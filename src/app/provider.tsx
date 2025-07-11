@@ -5,6 +5,7 @@ import { useUserStore } from "@/store/userStore";
 import { usePathname, useRouter } from "next/navigation";
 import { getCurrentUser } from "@/lib/clerk";
 import { useAuth } from "@clerk/nextjs";
+import { UserSync } from "@/components/custom/user-sync";
 
 export default function Provider({ children }: { children: React.ReactNode }) {
   const { setUser, setLoading } = useUserStore();
@@ -107,5 +108,10 @@ export default function Provider({ children }: { children: React.ReactNode }) {
     }
   }, [userId]);
 
-  return <>{children}</>;
+  return (
+    <>
+      <UserSync />
+      {children}
+    </>
+  );
 }

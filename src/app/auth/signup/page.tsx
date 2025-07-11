@@ -41,7 +41,7 @@ export default function SignUpPage() {
   // 检查用户是否已登录，如果已登录则重定向
   useEffect(() => {
     if (isSignedIn) {
-      router.push('/dashboard');
+      router.push('/');
     }
   }, [isSignedIn, router]);
 
@@ -143,7 +143,7 @@ export default function SignUpPage() {
       if (result.status === 'complete') {
         await setActive({ session: result.createdSessionId });
         toast.success('注册成功，欢迎使用！');
-        router.push('/dashboard');
+        router.push('/');
       } else {
         setError('验证失败，请检查验证码是否正确');
       }
@@ -192,7 +192,7 @@ export default function SignUpPage() {
       await signUp.authenticateWithRedirect({
         strategy: provider,
         redirectUrl: `${window.location.origin}/auth/sso-callback`,
-        redirectUrlComplete: `${window.location.origin}/dashboard`,
+        redirectUrlComplete: `${window.location.origin}/`,
       });
     } catch (err: any) {
       console.error('OAuth 错误:', err);

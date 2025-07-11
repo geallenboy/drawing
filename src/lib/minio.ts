@@ -111,7 +111,7 @@ export async function ensureBucketExists() {
     }
 }
 
-// 上传绘图数据到 MinIO
+// 上传画图数据到 MinIO
 export async function uploadDrawingData(drawingId: string, data: any): Promise<string> {
     try {
     // 检查MinIO是否可用
@@ -133,16 +133,16 @@ export async function uploadDrawingData(drawingId: string, data: any): Promise<s
         
     await client.putObject(DRAWING_BUCKET, fileName, dataString);
         
-    console.log(`✅ 绘图数据上传成功: ${fileName}`);
+    console.log(`✅ 画图数据上传成功: ${fileName}`);
         return fileName;
     } catch (error) {
-    console.error('❌ 上传绘图数据失败:', error);
+    console.error('❌ 上传画图数据失败:', error);
     // 不抛出错误，允许应用继续运行
     return '';
     }
 }
 
-// 从 MinIO 获取绘图数据
+// 从 MinIO 获取画图数据
 export async function getDrawingData(fileName: string): Promise<any> {
     try {
     if (!fileName) {
@@ -164,20 +164,20 @@ export async function getDrawingData(fileName: string): Promise<any> {
                     const data = Buffer.concat(chunks).toString();
                     resolve(JSON.parse(data));
                 } catch (parseError) {
-                    reject(new Error('解析绘图数据失败'));
+                    reject(new Error('解析画图数据失败'));
                 }
             });
             stream.on('error', (error: any) => {
-                reject(new Error('获取绘图数据失败'));
+                reject(new Error('获取画图数据失败'));
             });
         });
     } catch (error) {
-    console.error('❌ 获取绘图数据失败:', error);
+    console.error('❌ 获取画图数据失败:', error);
     return null; // 返回null而不是抛出错误
     }
 }
 
-// 从 MinIO 删除绘图数据
+// 从 MinIO 删除画图数据
 export async function deleteDrawingData(fileName: string): Promise<void> {
     try {
     if (!fileName) {
@@ -191,9 +191,9 @@ export async function deleteDrawingData(fileName: string): Promise<void> {
     }
     
     await client.removeObject(DRAWING_BUCKET, fileName);
-    console.log(`✅ 绘图数据删除成功: ${fileName}`);
+    console.log(`✅ 画图数据删除成功: ${fileName}`);
     } catch (error) {
-    console.error('❌ 删除绘图数据失败:', error);
+    console.error('❌ 删除画图数据失败:', error);
     // 不抛出错误，允许应用继续运行
     }
 }

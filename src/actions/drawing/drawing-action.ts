@@ -9,7 +9,7 @@ import { createDrawingWithMinio, getDrawingWithMinioData, updateDrawingWithMinio
 import { deleteDrawingData } from "@/lib/minio";
 
 
-// 创建新绘图
+// 创建新画图
 export async function createDrawingAction(data: any): Promise<ActionResponse> {
     try {
         // 获取当前用户
@@ -20,12 +20,12 @@ export async function createDrawingAction(data: any): Promise<ActionResponse> {
 
         // 确保必要字段存在
         if (!data.name) {
-            return errorResponse("绘图名称不能为空");
+            return errorResponse("画图名称不能为空");
         }
         
         // 强制验证文件夹ID
         if (!data.parentFolderId) {
-            return errorResponse("绘图必须属于某个文件夹");
+            return errorResponse("画图必须属于某个文件夹");
         }
 
         console.log(data, "data")
@@ -43,23 +43,23 @@ export async function createDrawingAction(data: any): Promise<ActionResponse> {
         };
         console.log(drawingData, "drawingData")
 
-        // 创建新绘图
+        // 创建新画图
         const [newDrawing] = await db
             .insert(AIDTDrawingTable)
             .values(drawingData)
             .returning();
 
-        if (newDrawing == null) throw new Error("创建绘图失败");
+        if (newDrawing == null) throw new Error("创建画图失败");
 
         return successResponse({ drawing: newDrawing });
 
     } catch (error) {
-        console.error("创建绘图时发生错误:", error);
-        return errorResponse(error instanceof Error ? error.message : "创建绘图失败");
+        console.error("创建画图时发生错误:", error);
+        return errorResponse(error instanceof Error ? error.message : "创建画图失败");
     }
 }
 
-// 通过ID获取绘图
+// 通过ID获取画图
 export async function getDrawingByIdAction(id: string): Promise<ActionResponse> {
     try {
         // 获取当前用户
@@ -69,33 +69,33 @@ export async function getDrawingByIdAction(id: string): Promise<ActionResponse> 
         }
 
         if (!id) {
-            return errorResponse("绘图ID不能为空");
+            return errorResponse("画图ID不能为空");
         }
 
-        // 获取绘图
+        // 获取画图
         const [drawing] = await db
             .select()
             .from(AIDTDrawingTable)
             .where(eq(AIDTDrawingTable.id, id));
 
         if (!drawing) {
-            return errorResponse("未找到指定绘图");
+            return errorResponse("未找到指定画图");
         }
 
         // 检查权限
         if (drawing.userId !== session?.userId) {
-            return errorResponse("无权访问该绘图");
+            return errorResponse("无权访问该画图");
         }
 
         return successResponse({ drawing });
 
     } catch (error) {
-        console.error("获取绘图时发生错误:", error);
-        return errorResponse(error instanceof Error ? error.message : "获取绘图失败");
+        console.error("获取画图时发生错误:", error);
+        return errorResponse(error instanceof Error ? error.message : "获取画图失败");
     }
 }
 
-// 获取用户的所有绘图
+// 获取用户的所有画图
 export async function getDrawingsByUserIdAction(): Promise<ActionResponse> {
     try {
         // 获取当前用户
@@ -106,7 +106,7 @@ export async function getDrawingsByUserIdAction(): Promise<ActionResponse> {
 
         const userId = session?.userId;
 
-        // 获取用户的所有未删除绘图
+        // 获取用户的所有未删除画图
         const drawings = await db
             .select()
             .from(AIDTDrawingTable)
@@ -115,12 +115,12 @@ export async function getDrawingsByUserIdAction(): Promise<ActionResponse> {
         return successResponse({ drawings });
 
     } catch (error) {
-        console.error("获取用户绘图时发生错误:", error);
-        return errorResponse(error instanceof Error ? error.message : "获取用户绘图失败");
+        console.error("获取用户画图时发生错误:", error);
+        return errorResponse(error instanceof Error ? error.message : "获取用户画图失败");
     }
 }
 
-// 根据文件夹ID获取绘图
+// 根据文件夹ID获取画图
 export async function getDrawingsByFolderIdAction(folderId?: string): Promise<ActionResponse> {
     try {
         // 获取当前用户
@@ -131,7 +131,7 @@ export async function getDrawingsByFolderIdAction(folderId?: string): Promise<Ac
 
         const userId = session?.userId;
 
-        // 根据文件夹ID查询绘图，如果folderId为空或null，则查询根目录的绘图
+        // 查询画图数据
         const drawings = await db
             .select()
             .from(AIDTDrawingTable)
@@ -144,15 +144,33 @@ export async function getDrawingsByFolderIdAction(folderId?: string): Promise<Ac
                     }`
             );
 
-        return successResponse({ drawings });
+        // 获取用户信息并组合数据
+        const { getUserById } = await import("@/services/user/user-service");
+        const userResult = await getUserById(userId);
+        
+        const userInfo = userResult.success ? {
+            id: userResult.user?.id,
+            email: userResult.user?.email,
+            firstName: userResult.user?.fullName?.split(' ')[0],
+            lastName: userResult.user?.fullName?.split(' ').slice(1).join(' '),
+            imageUrl: userResult.user?.avatarUrl,
+        } : null;
+
+        // 为每个画图添加用户信息
+        const drawingsWithUser = drawings.map(drawing => ({
+            ...drawing,
+            user: userInfo
+        }));
+
+        return successResponse({ drawings: drawingsWithUser });
 
     } catch (error) {
-        console.error("根据文件夹获取绘图时发生错误:", error);
-        return errorResponse(error instanceof Error ? error.message : "获取绘图失败");
+        console.error("根据文件夹获取画图时发生错误:", error);
+        return errorResponse(error instanceof Error ? error.message : "获取画图失败");
     }
 }
 
-// 更新绘图信息（集成 MinIO）
+// 更新画图信息（集成 MinIO）
 export async function updateDrawingAction(id: string, formData: FormData | Record<string, any>): Promise<ActionResponse> {
     try {
         // 获取当前用户
@@ -162,7 +180,7 @@ export async function updateDrawingAction(id: string, formData: FormData | Recor
         }
 
         if (!id) {
-            return errorResponse("绘图ID不能为空");
+            return errorResponse("画图ID不能为空");
         }
 
         // 检查权限
@@ -172,11 +190,11 @@ export async function updateDrawingAction(id: string, formData: FormData | Recor
             .where(eq(AIDTDrawingTable.id, id));
 
         if (!drawing) {
-            return errorResponse("未找到指定绘图");
+            return errorResponse("未找到指定画图");
         }
 
         if (drawing.userId !== session?.userId) {
-            return errorResponse("无权修改该绘图");
+            return errorResponse("无权修改该画图");
         }
 
         // 处理表单数据
@@ -192,25 +210,25 @@ export async function updateDrawingAction(id: string, formData: FormData | Recor
         if (data.desc !== undefined) updateData.desc = data.desc;
         if (data.parentFolderId !== undefined) updateData.parentFolderId = data.parentFolderId;
         
-        // 如果有绘图数据，准备上传到 MinIO
+        // 如果有画图数据，准备上传到 MinIO
         if (data.data !== undefined) {
             updateData.data = typeof data.data === 'string'
                 ? JSON.parse(data.data)
                 : data.data;
         }
 
-        // 使用集成 MinIO 的服务更新绘图
+        // 使用集成 MinIO 的服务更新画图
         const updatedDrawing = await updateDrawingWithMinio(id, updateData);
 
         return successResponse({ drawing: updatedDrawing });
 
     } catch (error) {
-        console.error("更新绘图时发生错误:", error);
-        return errorResponse(error instanceof Error ? error.message : "更新绘图失败");
+        console.error("更新画图时发生错误:", error);
+        return errorResponse(error instanceof Error ? error.message : "更新画图失败");
     }
 }
 
-// 删除绘图（包括 MinIO 数据）
+// 删除画图（包括 MinIO 数据）
 export async function deleteDrawingAction(id: string): Promise<ActionResponse> {
     try {
         // 获取当前用户
@@ -220,7 +238,7 @@ export async function deleteDrawingAction(id: string): Promise<ActionResponse> {
         }
 
         if (!id) {
-            return errorResponse("绘图ID不能为空");
+            return errorResponse("画图ID不能为空");
         }
 
         // 检查权限
@@ -230,18 +248,18 @@ export async function deleteDrawingAction(id: string): Promise<ActionResponse> {
             .where(eq(AIDTDrawingTable.id, id));
 
         if (!drawing) {
-            return errorResponse("未找到指定绘图");
+            return errorResponse("未找到指定画图");
         }
 
         if (drawing.userId !== session?.userId) {
-            return errorResponse("无权删除该绘图");
+            return errorResponse("无权删除该画图");
         }
 
         // 先删除 MinIO 中的数据
         try {
             await deleteDrawingData(`${id}.json`);
         } catch (minioError) {
-            console.warn("删除 MinIO 中的绘图数据失败:", minioError);
+            console.warn("删除 MinIO 中的画图数据失败:", minioError);
             // MinIO 删除失败不阻止数据库删除，继续执行
         }
 
@@ -251,20 +269,20 @@ export async function deleteDrawingAction(id: string): Promise<ActionResponse> {
             .where(eq(AIDTDrawingTable.id, id))
             .returning();
 
-        if (deletedDrawing == null) throw new Error("删除绘图失败");
+        if (deletedDrawing == null) throw new Error("删除画图失败");
 
         return successResponse({
             drawing: deletedDrawing,
-            message: "绘图已删除"
+            message: "画图已删除"
         });
 
     } catch (error) {
-        console.error("删除绘图时发生错误:", error);
-        return errorResponse(error instanceof Error ? error.message : "删除绘图失败");
+        console.error("删除画图时发生错误:", error);
+        return errorResponse(error instanceof Error ? error.message : "删除画图失败");
     }
 }
 
-// 获取绘图列表（带分页）
+// 获取画图列表（带分页）
 export async function listDrawingsAction(limit: number = 20, offset: number = 0): Promise<ActionResponse> {
     try {
         // 获取当前用户
@@ -275,7 +293,7 @@ export async function listDrawingsAction(limit: number = 20, offset: number = 0)
 
         const userId = session?.userId;
 
-        // 获取用户的绘图，带分页
+        // 获取用户的画图，带分页
         const drawings = await db
             .select()
             .from(AIDTDrawingTable)
@@ -302,12 +320,12 @@ export async function listDrawingsAction(limit: number = 20, offset: number = 0)
         });
 
     } catch (error) {
-        console.error("获取绘图列表时发生错误:", error);
-        return errorResponse(error instanceof Error ? error.message : "获取绘图列表失败");
+        console.error("获取画图列表时发生错误:", error);
+        return errorResponse(error instanceof Error ? error.message : "获取画图列表失败");
     }
 }
 
-// 搜索绘图
+// 搜索画图
 export async function searchDrawingsAction(query: string): Promise<ActionResponse> {
     try {
         // 获取当前用户
@@ -340,12 +358,12 @@ export async function searchDrawingsAction(query: string): Promise<ActionRespons
         });
 
     } catch (error) {
-        console.error("搜索绘图时发生错误:", error);
-        return errorResponse(error instanceof Error ? error.message : "搜索绘图失败");
+        console.error("搜索画图时发生错误:", error);
+        return errorResponse(error instanceof Error ? error.message : "搜索画图失败");
     }
 }
 
-// 软删除绘图（移入回收站）
+// 软删除画图（移入回收站）
 export async function softDeleteDrawingAction(id: string): Promise<ActionResponse> {
     try {
         // 获取当前用户
@@ -355,7 +373,7 @@ export async function softDeleteDrawingAction(id: string): Promise<ActionRespons
         }
 
         if (!id) {
-            return errorResponse("绘图ID不能为空");
+            return errorResponse("画图ID不能为空");
         }
 
         // 检查权限
@@ -365,11 +383,11 @@ export async function softDeleteDrawingAction(id: string): Promise<ActionRespons
             .where(eq(AIDTDrawingTable.id, id));
 
         if (!drawing) {
-            return errorResponse("未找到指定绘图");
+            return errorResponse("未找到指定画图");
         }
 
         if (drawing.userId !== session?.userId) {
-            return errorResponse("无权删除该绘图");
+            return errorResponse("无权删除该画图");
         }
 
         // 软删除实现
@@ -383,20 +401,20 @@ export async function softDeleteDrawingAction(id: string): Promise<ActionRespons
             .where(eq(AIDTDrawingTable.id, id))
             .returning();
 
-        if (updatedDrawing == null) throw new Error("移动绘图到回收站失败");
+        if (updatedDrawing == null) throw new Error("移动画图到回收站失败");
 
         return successResponse({
             drawing: updatedDrawing,
-            message: "绘图已移至回收站"
+            message: "画图已移至回收站"
         });
 
     } catch (error) {
-        console.error("软删除绘图时发生错误:", error);
-        return errorResponse(error instanceof Error ? error.message : "移动绘图到回收站失败");
+        console.error("软删除画图时发生错误:", error);
+        return errorResponse(error instanceof Error ? error.message : "移动画图到回收站失败");
     }
 }
 
-// 恢复已软删除的绘图
+// 恢复已软删除的画图
 export async function restoreDrawingAction(id: string): Promise<ActionResponse> {
     try {
         // 获取当前用户
@@ -406,7 +424,7 @@ export async function restoreDrawingAction(id: string): Promise<ActionResponse> 
         }
 
         if (!id) {
-            return errorResponse("绘图ID不能为空");
+            return errorResponse("画图ID不能为空");
         }
 
         // 检查权限
@@ -416,11 +434,11 @@ export async function restoreDrawingAction(id: string): Promise<ActionResponse> 
             .where(eq(AIDTDrawingTable.id, id));
 
         if (!drawing) {
-            return errorResponse("未找到指定绘图");
+            return errorResponse("未找到指定画图");
         }
 
         if (drawing.userId !== session?.userId) {
-            return errorResponse("无权恢复该绘图");
+            return errorResponse("无权恢复该画图");
         }
 
         // 恢复实现
@@ -434,20 +452,20 @@ export async function restoreDrawingAction(id: string): Promise<ActionResponse> 
             .where(eq(AIDTDrawingTable.id, id))
             .returning();
 
-        if (updatedDrawing == null) throw new Error("恢复绘图失败");
+        if (updatedDrawing == null) throw new Error("恢复画图失败");
 
         return successResponse({
             drawing: updatedDrawing,
-            message: "绘图已恢复"
+            message: "画图已恢复"
         });
 
     } catch (error) {
-        console.error("恢复绘图时发生错误:", error);
-        return errorResponse(error instanceof Error ? error.message : "恢复绘图失败");
+        console.error("恢复画图时发生错误:", error);
+        return errorResponse(error instanceof Error ? error.message : "恢复画图失败");
     }
 }
 
-// 获取用户回收站中的绘图
+// 获取用户回收站中的画图
 export async function getRecycleBinDrawingsAction(): Promise<ActionResponse> {
     try {
         // 获取当前用户
@@ -458,7 +476,7 @@ export async function getRecycleBinDrawingsAction(): Promise<ActionResponse> {
 
         const userId = session?.userId;
 
-        // 获取回收站中的绘图
+        // 获取回收站中的画图
         const drawings = await db
             .select()
             .from(AIDTDrawingTable)
@@ -467,8 +485,8 @@ export async function getRecycleBinDrawingsAction(): Promise<ActionResponse> {
         return successResponse({ drawings });
 
     } catch (error) {
-        console.error("获取回收站绘图时发生错误:", error);
-        return errorResponse(error instanceof Error ? error.message : "获取回收站绘图失败");
+        console.error("获取回收站画图时发生错误:", error);
+        return errorResponse(error instanceof Error ? error.message : "获取回收站画图失败");
     }
 }
 
@@ -482,7 +500,7 @@ export async function toggleFavoriteDrawingAction(id: string): Promise<ActionRes
         }
 
         if (!id) {
-            return errorResponse("绘图ID不能为空");
+            return errorResponse("画图ID不能为空");
         }
 
         // 检查权限
@@ -492,11 +510,11 @@ export async function toggleFavoriteDrawingAction(id: string): Promise<ActionRes
             .where(eq(AIDTDrawingTable.id, id));
 
         if (!drawing) {
-            return errorResponse("未找到指定绘图");
+            return errorResponse("未找到指定画图");
         }
 
         if (drawing.userId !== session?.userId) {
-            return errorResponse("无权操作该绘图");
+            return errorResponse("无权操作该画图");
         }
 
         // 切换收藏状态
@@ -522,7 +540,7 @@ export async function toggleFavoriteDrawingAction(id: string): Promise<ActionRes
     }
 }
 
-// 获取收藏的绘图
+// 获取收藏的画图
 export async function getFavoriteDrawingsAction(): Promise<ActionResponse> {
     try {
         // 获取当前用户
@@ -533,7 +551,7 @@ export async function getFavoriteDrawingsAction(): Promise<ActionResponse> {
 
         const userId = session?.userId;
 
-        // 获取用户收藏的绘图
+        // 获取用户收藏的画图
         const drawings = await db
             .select()
             .from(AIDTDrawingTable)
@@ -546,12 +564,12 @@ export async function getFavoriteDrawingsAction(): Promise<ActionResponse> {
         return successResponse({ drawings });
 
     } catch (error) {
-        console.error("获取收藏绘图时发生错误:", error);
-        return errorResponse(error instanceof Error ? error.message : "获取收藏绘图失败");
+        console.error("获取收藏画图时发生错误:", error);
+        return errorResponse(error instanceof Error ? error.message : "获取收藏画图失败");
     }
 }
 
-// 获取文件夹中的绘图
+// 获取文件夹中的画图
 export async function getFolderDrawingsAction(folderId: string): Promise<ActionResponse> {
     try {
         // 获取当前用户
@@ -562,10 +580,10 @@ export async function getFolderDrawingsAction(folderId: string): Promise<ActionR
 
         const userId = session?.userId;
 
-        // 获取指定文件夹中的绘图
+        // 获取指定文件夹中的画图
         let drawings;
         if (!folderId || folderId === 'root') {
-            // 根目录，获取没有parentFolderId的绘图
+            // 根目录，获取没有parentFolderId的画图
             drawings = await db
                 .select()
                 .from(AIDTDrawingTable)
@@ -575,7 +593,7 @@ export async function getFolderDrawingsAction(folderId: string): Promise<ActionR
                     ${AIDTDrawingTable.parentFolderId} IS NULL
                 `);
         } else {
-            // 获取指定文件夹中的绘图
+            // 获取指定文件夹中的画图
             drawings = await db
                 .select()
                 .from(AIDTDrawingTable)
@@ -592,12 +610,12 @@ export async function getFolderDrawingsAction(folderId: string): Promise<ActionR
         });
 
     } catch (error) {
-        console.error("获取文件夹绘图时发生错误:", error);
-        return errorResponse(error instanceof Error ? error.message : "获取文件夹绘图失败");
+        console.error("获取文件夹画图时发生错误:", error);
+        return errorResponse(error instanceof Error ? error.message : "获取文件夹画图失败");
     }
 }
 
-// 创建绘图（集成 MinIO）
+// 创建画图（集成 MinIO）
 export async function createDrawingWithMinioAction(data: any): Promise<ActionResponse> {
     try {
         // 获取当前用户
@@ -608,12 +626,12 @@ export async function createDrawingWithMinioAction(data: any): Promise<ActionRes
 
         // 确保必要字段存在
         if (!data.name) {
-            return errorResponse("绘图名称不能为空");
+            return errorResponse("画图名称不能为空");
         }
         
         // 强制验证文件夹ID
         if (!data.parentFolderId) {
-            return errorResponse("绘图必须属于某个文件夹");
+            return errorResponse("画图必须属于某个文件夹");
         }
 
         // 准备插入数据
@@ -629,18 +647,18 @@ export async function createDrawingWithMinioAction(data: any): Promise<ActionRes
             deletedAt: null
         };
 
-        // 使用集成 MinIO 的服务创建绘图
+        // 使用集成 MinIO 的服务创建画图
         const newDrawing = await createDrawingWithMinio(drawingData);
 
         return successResponse({ drawing: newDrawing });
 
     } catch (error) {
-        console.error("创建绘图时发生错误:", error);
-        return errorResponse(error instanceof Error ? error.message : "创建绘图失败");
+        console.error("创建画图时发生错误:", error);
+        return errorResponse(error instanceof Error ? error.message : "创建画图失败");
     }
 }
 
-// 获取绘图及其数据（集成 MinIO）
+// 获取画图及其数据（集成 MinIO）
 export async function getDrawingWithDataAction(id: string): Promise<ActionResponse> {
     try {
         // 获取当前用户
@@ -650,19 +668,19 @@ export async function getDrawingWithDataAction(id: string): Promise<ActionRespon
         }
 
         if (!id) {
-            return errorResponse("绘图ID不能为空");
+            return errorResponse("画图ID不能为空");
         }
 
-        // 获取绘图及 MinIO 数据
+        // 获取画图及 MinIO 数据
         const drawingWithData = await getDrawingWithMinioData(id);
 
         if (!drawingWithData) {
-            return errorResponse("未找到指定绘图");
+            return errorResponse("未找到指定画图");
         }
 
         // 检查权限
         if (drawingWithData.userId !== session?.userId) {
-            return errorResponse("无权访问该绘图");
+            return errorResponse("无权访问该画图");
         }
 
         // 合并数据库数据和 MinIO 数据
@@ -674,7 +692,7 @@ export async function getDrawingWithDataAction(id: string): Promise<ActionRespon
         return successResponse({ drawing: responseData });
 
     } catch (error) {
-        console.error("获取绘图时发生错误:", error);
-        return errorResponse(error instanceof Error ? error.message : "获取绘图失败");
+        console.error("获取画图时发生错误:", error);
+        return errorResponse(error instanceof Error ? error.message : "获取画图失败");
     }
 }

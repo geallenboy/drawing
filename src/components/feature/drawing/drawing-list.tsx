@@ -28,7 +28,10 @@ import {
   Folder,
   FolderOpen,
   FileText,
-  Plus
+  Plus,
+  Edit2,
+  Check,
+  X
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
@@ -36,6 +39,7 @@ import { getDrawingsByUserIdAction, getDrawingsByFolderIdAction } from "@/action
 import { getFolders } from "@/actions/folder/folder-actions";
 import { format } from "date-fns";
 import { zhCN } from "date-fns/locale";
+import { toast } from "sonner";
 
 type Drawing = {
   id: string;
@@ -94,6 +98,11 @@ const DrawingList = ({ searchQuery, currentFolderId, onFolderClick }: DrawingLis
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(12);
+  
+  // 编辑名称状态
+  const [editingDrawingId, setEditingDrawingId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState<string>("");
+  const [isUpdating, setIsUpdating] = useState(false);
 
   // 加载数据（只加载绘图，不加载文件夹）
   const loadData = async () => {
@@ -205,6 +214,58 @@ const DrawingList = ({ searchQuery, currentFolderId, onFolderClick }: DrawingLis
     }
   };
 
+  // 开始编辑名称
+  const startEditingName = (drawing: Drawing) => {
+    setEditingDrawingId(drawing.id);
+    setEditingName(drawing.name);
+  };
+
+  // 取消编辑
+  const cancelEditing = () => {
+    setEditingDrawingId(null);
+    setEditingName("");
+  };
+
+  // 保存名称
+  const saveDrawingName = async () => {
+    if (!editingDrawingId || !editingName.trim() || isUpdating) return;
+
+    setIsUpdating(true);
+    try {
+      const { updateDrawingAction } = await import("@/actions/drawing/drawing-action");
+      const result = await updateDrawingAction(editingDrawingId, { name: editingName.trim() });
+      
+      if (result.success) {
+        // 更新本地状态
+        setDrawings(prev => 
+          prev.map(drawing => 
+            drawing.id === editingDrawingId 
+              ? { ...drawing, name: editingName.trim() }
+              : drawing
+          )
+        );
+        toast.success("名称修改成功");
+        cancelEditing();
+      } else {
+        toast.error(result.error || "修改名称失败");
+      }
+    } catch (error) {
+      console.error("Error updating drawing name:", error);
+      toast.error("修改名称失败");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  // 处理按键事件
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      saveDrawingName();
+    } else if (e.key === 'Escape') {
+      cancelEditing();
+    }
+  };
+
   // 渲染加载状态
   if (loading) {
     return (
@@ -246,9 +307,46 @@ const DrawingList = ({ searchQuery, currentFolderId, onFolderClick }: DrawingLis
       <Card key={drawing.id} className="group hover:shadow-lg transition-all duration-200 cursor-pointer">
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-sm font-medium truncate flex-1 mr-2">
-              {drawing.name}
-            </CardTitle>
+            <div className="flex-1 mr-2">
+              {editingDrawingId === drawing.id ? (
+                <div className="flex items-center space-x-2">
+                  <Input
+                    value={editingName}
+                    onChange={(e) => setEditingName(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    autoFocus
+                    className="h-8 text-sm"
+                    disabled={isUpdating}
+                  />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 w-6 p-0"
+                    onClick={saveDrawingName}
+                    disabled={isUpdating}
+                  >
+                    <Check className="h-3 w-3" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 w-6 p-0"
+                    onClick={cancelEditing}
+                    disabled={isUpdating}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+              ) : (
+                <CardTitle 
+                  className="text-sm font-medium truncate cursor-pointer hover:text-primary transition-colors"
+                  onDoubleClick={() => startEditingName(drawing)}
+                  title="双击编辑名称"
+                >
+                  {drawing.name}
+                </CardTitle>
+              )}
+            </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
@@ -256,14 +354,7 @@ const DrawingList = ({ searchQuery, currentFolderId, onFolderClick }: DrawingLis
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => router.push(`/drawing/${drawing.id}`)}>
-                  <Eye className="w-4 h-4 mr-2" />
-                  查看详情
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => shareDrawing(drawing)}>
-                  <Share2 className="w-4 h-4 mr-2" />
-                  分享
-                </DropdownMenuItem>
+                
                 {isOwner && (
                   <DropdownMenuItem onClick={() => router.push(`/drawing/${drawing.id}`)}>
                     <Palette className="w-4 h-4 mr-2" />
@@ -303,50 +394,9 @@ const DrawingList = ({ searchQuery, currentFolderId, onFolderClick }: DrawingLis
                 </Avatar>
                 <span>{drawing.user?.firstName || drawing.user?.email?.split('@')[0] || '匿名用户'}</span>
               </div>
-              <time>{format(new Date(drawing.updatedAt), 'MM/dd', { locale: zhCN })}</time>
+              <time>{format(new Date(drawing.updatedAt), 'yyyy/MM/dd HH:mm', { locale: zhCN })}</time>
             </div>
 
-            {/* 标签 */}
-            {drawing.tags && drawing.tags.length > 0 && (
-              <div className="flex flex-wrap gap-1">
-                {drawing.tags.slice(0, 2).map((tag, index) => (
-                  <Badge key={index} variant="secondary" className="text-xs px-1 py-0">
-                    {tag}
-                  </Badge>
-                ))}
-                {drawing.tags.length > 2 && (
-                  <Badge variant="outline" className="text-xs px-1 py-0">
-                    +{drawing.tags.length - 2}
-                  </Badge>
-                )}
-              </div>
-            )}
-
-            {/* 操作按钮 */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-1">
-                {drawing.viewCount && drawing.viewCount > 0 && (
-                  <div className="flex items-center text-xs text-muted-foreground">
-                    <Eye className="h-3 w-3 mr-1" />
-                    {drawing.viewCount}
-                  </div>
-                )}
-              </div>
-              
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-6 w-6 p-0"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggleFavorite(drawing.id);
-                }}
-              >
-                <Heart 
-                  className={`h-4 w-4 ${isFavorited ? 'fill-red-500 text-red-500' : 'text-muted-foreground'}`}
-                />
-              </Button>
-            </div>
           </div>
         </CardContent>
       </Card>
@@ -373,31 +423,50 @@ const DrawingList = ({ searchQuery, currentFolderId, onFolderClick }: DrawingLis
             {/* 内容区域 */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between mb-1">
-                <h3 
-                  className="font-medium truncate cursor-pointer hover:text-blue-600"
-                  onClick={() => router.push(`/drawing/${drawing.id}`)}
-                >
-                  {drawing.name}
-                </h3>
-                <div className="flex items-center space-x-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 w-6 p-0"
-                    onClick={() => toggleFavorite(drawing.id)}
-                  >
-                    <Heart 
-                      className={`h-4 w-4 ${isFavorited ? 'fill-red-500 text-red-500' : 'text-muted-foreground'}`}
+                {editingDrawingId === drawing.id ? (
+                  <div className="flex items-center space-x-2 flex-1">
+                    <Input
+                      value={editingName}
+                      onChange={(e) => setEditingName(e.target.value)}
+                      onKeyPress={handleKeyPress}
+                      autoFocus
+                      className="h-8"
+                      disabled={isUpdating}
                     />
-                  </Button>
-                </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0"
+                      onClick={saveDrawingName}
+                      disabled={isUpdating}
+                    >
+                      <Check className="h-3 w-3" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0"
+                      onClick={cancelEditing}
+                      disabled={isUpdating}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                ) : (
+                  <h3 
+                    className="font-medium truncate cursor-pointer hover:text-blue-600 flex-1"
+                    onClick={() => router.push(`/drawing/${drawing.id}`)}
+                    onDoubleClick={(e) => {
+                      e.stopPropagation();
+                      startEditingName(drawing);
+                    }}
+                    title="双击编辑名称，单击查看详情"
+                  >
+                    {drawing.name}
+                  </h3>
+                )}
+                
               </div>
-
-              {drawing.desc && (
-                <p className="text-sm text-muted-foreground line-clamp-1 mb-2">
-                  {drawing.desc}
-                </p>
-              )}
 
               <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <div className="flex items-center space-x-3">
@@ -410,13 +479,6 @@ const DrawingList = ({ searchQuery, currentFolderId, onFolderClick }: DrawingLis
                     </Avatar>
                     <span>{drawing.user?.firstName || drawing.user?.email?.split('@')[0] || '匿名用户'}</span>
                   </div>
-                  
-                  {drawing.viewCount && drawing.viewCount > 0 && (
-                    <div className="flex items-center">
-                      <Eye className="h-3 w-3 mr-1" />
-                      {drawing.viewCount}
-                    </div>
-                  )}
                 </div>
 
                 <time>{format(new Date(drawing.updatedAt), 'yyyy/MM/dd HH:mm', { locale: zhCN })}</time>
@@ -431,14 +493,7 @@ const DrawingList = ({ searchQuery, currentFolderId, onFolderClick }: DrawingLis
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => router.push(`/drawing/${drawing.id}`)}>
-                  <Eye className="w-4 h-4 mr-2" />
-                  查看详情
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => shareDrawing(drawing)}>
-                  <Share2 className="w-4 h-4 mr-2" />
-                  分享
-                </DropdownMenuItem>
+               
                 {isOwner && (
                   <DropdownMenuItem onClick={() => router.push(`/drawing/${drawing.id}`)}>
                     <Palette className="w-4 h-4 mr-2" />
@@ -447,69 +502,6 @@ const DrawingList = ({ searchQuery, currentFolderId, onFolderClick }: DrawingLis
                 )}
               </DropdownMenuContent>
             </DropdownMenu>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  };
-
-  // 渲染文件夹卡片
-  const renderFolderCard = (folder: Folder) => {
-    return (
-      <Card 
-        key={folder.id} 
-        className="group hover:shadow-lg transition-all duration-200 cursor-pointer"
-        onClick={() => onFolderClick?.(folder.id)}
-      >
-        <CardHeader className="pb-2">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-sm font-medium truncate flex-1 mr-2">
-              {folder.name}
-            </CardTitle>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={(e) => e.stopPropagation()}>
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={(e) => {
-                  e.stopPropagation();
-                  onFolderClick?.(folder.id);
-                }}>
-                  <FolderOpen className="w-4 h-4 mr-2" />
-                  打开文件夹
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={(e) => e.stopPropagation()}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  在此创建绘图
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-          
-          {folder.desc && (
-            <p className="text-xs text-muted-foreground line-clamp-2">
-              {folder.desc}
-            </p>
-          )}
-        </CardHeader>
-
-        <CardContent className="pt-0">
-          {/* 文件夹图标区域 */}
-          <div className="h-32 bg-gradient-to-br from-amber-50 to-orange-100 rounded-lg mb-3 flex items-center justify-center cursor-pointer border-2 border-transparent hover:border-amber-200 transition-colors">
-            <Folder className="h-12 w-12 text-amber-500" />
-          </div>
-
-          {/* 底部信息 */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <span className="flex items-center space-x-1">
-                <Folder className="h-3 w-3" />
-                <span>文件夹</span>
-              </span>
-              <time>{format(new Date(folder.updatedAt), 'MM/dd', { locale: zhCN })}</time>
-            </div>
           </div>
         </CardContent>
       </Card>
@@ -544,17 +536,7 @@ const DrawingList = ({ searchQuery, currentFolderId, onFolderClick }: DrawingLis
 
         {/* 右侧：筛选和排序 */}
         <div className="flex items-center space-x-2">
-          <Select value={filterBy} onValueChange={(value: FilterOption) => setFilterBy(value)}>
-            <SelectTrigger className="w-24">
-              <Filter className="h-4 w-4 mr-1" />
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">全部</SelectItem>
-              <SelectItem value="mine">我的</SelectItem>
-              <SelectItem value="favorites">收藏</SelectItem>
-            </SelectContent>
-          </Select>
+       
 
           <Select value={sortBy} onValueChange={(value: SortOption) => setSortBy(value)}>
             <SelectTrigger className="w-28">

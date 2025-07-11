@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useImperativeHandle, forwardRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,11 +35,16 @@ type Folder = {
 };
 
 type FolderGridProps = {
-  onFolderSelect: (folderId: string) => void;
+  onFolderSelect: (folderId: string, folderName: string) => void;
   selectedFolderId?: string | null;
+  onFoldersChange?: () => void; // 新增：文件夹变更回调
 };
 
-const FolderGrid = ({ onFolderSelect, selectedFolderId }: FolderGridProps) => {
+export interface FolderGridRef {
+  refreshFolders: () => void;
+}
+
+const FolderGrid = forwardRef<FolderGridRef, FolderGridProps>(({ onFolderSelect, selectedFolderId, onFoldersChange }, ref) => {
   const { user } = useUser();
   const [folders, setFolders] = useState<Folder[]>([]);
   const [loading, setLoading] = useState(true);
@@ -97,13 +102,16 @@ const FolderGrid = ({ onFolderSelect, selectedFolderId }: FolderGridProps) => {
     loadFolders();
   }, []);
 
+  useImperativeHandle(ref, () => ({
+    refreshFolders: loadFolders,
+  }));
+
   // 创建文件夹
   const handleCreateFolder = async () => {
     if (!createName.trim()) {
       toast.error("请输入文件夹名称");
       return;
     }
-
     setCreateLoading(true);
     try {
       const result = await createFolder(createName.trim(), createDesc.trim());
@@ -113,6 +121,7 @@ const FolderGrid = ({ onFolderSelect, selectedFolderId }: FolderGridProps) => {
         setCreateName("");
         setCreateDesc("");
         loadFolders();
+        onFoldersChange?.(); // 调用回调
       } else {
         toast.error(result.error || "创建文件夹失败");
       }
@@ -141,6 +150,7 @@ const FolderGrid = ({ onFolderSelect, selectedFolderId }: FolderGridProps) => {
         setEditName("");
         setEditDesc("");
         loadFolders();
+        onFoldersChange?.(); // 调用回调
       } else {
         toast.error(result.error || "更新文件夹失败");
       }
@@ -169,10 +179,11 @@ const FolderGrid = ({ onFolderSelect, selectedFolderId }: FolderGridProps) => {
       if (result.success) {
         toast.success("文件夹删除成功");
         loadFolders();
+        onFoldersChange?.(); // 调用回调
         
         // 如果删除的是当前选中的文件夹，清空选择
         if (selectedFolderId === folder.id) {
-          onFolderSelect("");
+          onFolderSelect("", "");
         }
       } else {
         toast.error(result.error || "删除文件夹失败");
@@ -229,11 +240,7 @@ const FolderGrid = ({ onFolderSelect, selectedFolderId }: FolderGridProps) => {
         <span className="text-sm text-gray-500">
           共 {folders.length} 个文件夹
         </span>
-        <Button 
-          onClick={() => setCreateDialogOpen(true)}
-          size="sm"
-          className="gap-2"
-        >
+        <Button onClick={() => setCreateDialogOpen(true)} className="gap-2">
           <Plus className="w-4 h-4" />
           新建文件夹
         </Button>
@@ -247,7 +254,7 @@ const FolderGrid = ({ onFolderSelect, selectedFolderId }: FolderGridProps) => {
             className={`group hover:shadow-lg transition-all duration-200 cursor-pointer ${
               selectedFolderId === folder.id ? 'ring-2 ring-blue-500 bg-blue-50' : ''
             }`}
-            onClick={() => onFolderSelect(folder.id)}
+            onClick={() => onFolderSelect(folder.id, folder.name)}
           >
             <CardHeader className="pb-2 relative">
               <div className="flex items-center justify-between">
@@ -397,6 +404,8 @@ const FolderGrid = ({ onFolderSelect, selectedFolderId }: FolderGridProps) => {
       </Dialog>
     </div>
   );
-};
+});
+
+FolderGrid.displayName = "FolderGrid";
 
 export default FolderGrid;

@@ -1,7 +1,7 @@
 {
-  "name": "draw-text",
+  "name": "drawing",
   "version": "1.0.0",
-  "description": "一个开源的文本与绘图创作工具",
+  "description": "一个开源的画图创作工具",
   "author": "gegarron <gejialun88@gmail.com>",
   "license": "MIT",
   "homepage": "https://www.gegarron.com",

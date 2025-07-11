@@ -43,8 +43,8 @@ export async function getCurrentUserWithDbInfo() {
       const createResult = await createOrUpdateUser({
         id: clerkUser.id,
         email: clerkUser.emailAddresses[0]?.emailAddress || '',
-        fullName: `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || null,
-        avatarUrl: clerkUser.imageUrl || null,
+        fullName: `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || undefined,
+        avatarUrl: clerkUser.imageUrl || undefined,
       });
 
       if (createResult.success && 'user' in createResult) {

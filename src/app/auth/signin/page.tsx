@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useSignIn, useAuth } from '@clerk/nextjs';
@@ -12,7 +12,7 @@ import { Separator } from '@/components/ui/separator';
 import { Eye, EyeOff, Github, Mail, AlertCircle, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
-export default function SignInPage() {
+function SignInContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { signIn, setActive, isLoaded } = useSignIn();
@@ -254,6 +254,7 @@ export default function SignInPage() {
                 )}
                 Google
               </Button>
+              
               <Button
                 variant="outline"
                 onClick={() => handleOAuth('oauth_github')}
@@ -269,11 +270,8 @@ export default function SignInPage() {
             </div>
 
             <div className="text-center text-sm">
-              <span className="text-muted-foreground">还没有账户？ </span>
-              <Link
-                href="/auth/signup"
-                className="text-primary hover:underline font-medium"
-              >
+              <span className="text-muted-foreground">还没有账户？</span>{' '}
+              <Link href="/auth/signup" className="text-primary hover:underline">
                 立即注册
               </Link>
             </div>
@@ -281,5 +279,17 @@ export default function SignInPage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    }>
+      <SignInContent />
+    </Suspense>
   );
 }

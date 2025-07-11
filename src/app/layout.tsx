@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
@@ -12,12 +12,16 @@ const inter = Inter({
   display: 'swap',
 });
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+};
+
 export const metadata: Metadata = {
   title: "Drawing - 重新定义创意画图体验",
   description: "Drawing 结合了智能文本编辑和强大画图功能，为创作者提供无与伦比的创作体验。简洁直观，让创意自由流淌。",
   keywords: ["AI画图", "文本编辑", "创意工具", "在线画图", "智能创作"],
   authors: [{ name: "Drawing Team" }],
-  viewport: "width=device-width, initial-scale=1",
   robots: "index, follow",
   openGraph: {
     type: "website",

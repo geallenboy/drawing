@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -105,7 +105,7 @@ const DrawingList = ({ searchQuery, currentFolderId, onFolderClick }: DrawingLis
   const [isUpdating, setIsUpdating] = useState(false);
 
   // 加载数据（只加载绘图，不加载文件夹）
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -132,11 +132,11 @@ const DrawingList = ({ searchQuery, currentFolderId, onFolderClick }: DrawingLis
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentFolderId]);
 
   useEffect(() => {
     loadData();
-  }, [currentFolderId]);
+  }, [loadData]);
 
   // 筛选和排序逻辑
   const filteredAndSortedDrawings = React.useMemo(() => {

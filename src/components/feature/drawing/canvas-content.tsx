@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { 
   Folder,
@@ -41,6 +41,29 @@ const CanvasContent = () => {
   // FolderGrid 的 ref
   const folderGridRef = useRef<FolderGridRef>(null);
 
+  // 检查用户文件夹
+  const checkUserFolders = useCallback(async () => {
+    if (!user || isCreatingDefaultFolder) return;
+    
+    try {
+      const { getFolders } = await import("@/actions/folder/folder-actions");
+      const result = await getFolders();
+      
+      if (result.success) {
+        const folders = result.folders || [];
+        if (folders.length === 0) {
+          setHasNoFolders(true);
+          setShowWelcome(true);
+        } else {
+          setHasNoFolders(false);
+          setShowWelcome(false);
+        }
+      }
+    } catch (error) {
+      console.error("检查用户文件夹失败:", error);
+    }
+  }, [user, isCreatingDefaultFolder]);
+
   // 初始化应用和创建默认文件夹
   useEffect(() => {
     const initializeApp = async () => {
@@ -64,30 +87,7 @@ const CanvasContent = () => {
     if (user) {
       initializeApp();
     }
-  }, [searchParams, user]);
-
-  // 检查用户文件夹
-  const checkUserFolders = async () => {
-    if (!user || isCreatingDefaultFolder) return;
-    
-    try {
-      const { getFolders } = await import("@/actions/folder/folder-actions");
-      const result = await getFolders();
-      
-      if (result.success) {
-        const folders = result.folders || [];
-        if (folders.length === 0) {
-          setHasNoFolders(true);
-          setShowWelcome(true);
-        } else {
-          setHasNoFolders(false);
-          setShowWelcome(false);
-        }
-      }
-    } catch (error) {
-      console.error("检查用户文件夹失败:", error);
-    }
-  };
+  }, [searchParams, user, checkUserFolders]);
 
   // 创建新文件夹
   const handleCreateFolder = async () => {

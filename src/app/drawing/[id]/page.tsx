@@ -265,7 +265,7 @@ const DrawingWorkspace = () => {
     };
   }, [drawingData?.name, isDirty, saveDraft]);
 
-  const onSave = async () => {
+  const onSave = useCallback(async () => {
     if (excalidrawData.length > 0 && drawingData && drawingData.id) {
       try {
         setSaveStatus('saving');
@@ -303,7 +303,7 @@ const DrawingWorkspace = () => {
     } else {
       toast.error("没有可保存的画图数据或缺少必要信息");
     }
-  };
+  }, [excalidrawData, drawingData, saveDraft, id]);
 
   const handleExcalidrawChange = (elements: any) => {
     setExcalidrawData(elements);

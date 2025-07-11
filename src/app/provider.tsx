@@ -13,7 +13,6 @@ export default function Provider({ children }: { children: React.ReactNode }) {
   const { userId, isLoaded: isAuthLoaded } = useAuth();
   const [retryCount, setRetryCount] = useState(0);
   const [lastError, setLastError] = useState<string | null>(null);
-  console.log(userId, 33);
   // Maximum number of retries and exponential backoff delay
   const MAX_RETRIES = 5;
   const getRetryDelay = (attempt: number) => Math.min(1000 * Math.pow(2, attempt), 10000);
@@ -28,7 +27,6 @@ export default function Provider({ children }: { children: React.ReactNode }) {
         console.log(`Attempting to fetch user data (attempt ${retryCount + 1}/${MAX_RETRIES})`);
 
         const data = await getCurrentUser({ url: "/" });
-        console.log(data, 33);
         if (data) {
           console.log(`Successfully loaded user data for ${data.fullName} (${data.email})`);
           setUser({
@@ -91,7 +89,6 @@ export default function Provider({ children }: { children: React.ReactNode }) {
   }, [userId, isAuthLoaded, setUser, setLoading, retryCount, MAX_RETRIES]);
 
   useEffect(() => {
-    console.log(11133);
     if (pathname !== "/sign-in" && pathname !== "/sign-up" && isAuthLoaded) {
       init();
     } else {

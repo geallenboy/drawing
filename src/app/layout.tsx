@@ -43,6 +43,9 @@ export default async function RootLayout({
 }>) {
   return (
     <html lang="zh-CN" suppressHydrationWarning className={inter.variable}>
+      <head>
+        <link rel="icon" href="/logo.png" />
+      </head>
       <body className={`${inter.className} font-sans antialiased`}>
         <ClerkProvider>
           <Provider>

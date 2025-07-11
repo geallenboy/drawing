@@ -9,11 +9,12 @@ import { getDrawingWithDataAction, updateDrawingAction } from "@/actions/drawing
 import { useBeforeUnload } from "react-use";
 import SaveStatusIndicator, { SaveStatus } from "@/components/custom/save-status-indicator";
 import { useTheme } from "next-themes";
+import Image from "next/image";
 
 // 本地存储键前缀
 const STORAGE_KEY_PREFIX = "drawing_autosave_";
-// 自动保存到数据库的间隔 (30秒)
-const AUTO_SAVE_INTERVAL = 30000;
+// 自动保存到数据库的间隔 (300秒)
+const AUTO_SAVE_INTERVAL = 300000;
 // 自动保存到本地的间隔 (10秒)
 const LOCAL_SAVE_INTERVAL = 10000;
 // 草稿过期时间 (24小时)
@@ -30,16 +31,18 @@ const DrawingWorkspace = () => {
   const id = (params.id || "") as string;
   const [excalidrawData, setExcalidrawData] = useState<any[]>([]);
   const [drawingData, setDrawingData] = useState<any>();
-  const [isDirty, setIsDirty] = useState(false);
+  const [isDirty, setIsDirty] = useState(false); // 是否修改
   const [lastSaveTime, setLastSaveTime] = useState<Date | null>(null);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
   const [saveError, setSaveError] = useState<string>("");
+  // 新增：标记是否真正需要保存提示
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   const dataRef = useRef<any>([]);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // 当用户想要离开页面时，如果有未保存的更改，显示确认对话框
-  useBeforeUnload(isDirty, "您有未保存的画图更改，确定要离开吗？");
+  // 当用户想要离开页面时，只有真正有未保存的更改时才显示确认对话框
+  useBeforeUnload(hasUnsavedChanges, "您有未保存的画图更改，确定要离开吗？");
 
   // 从本地存储中加载草稿
   const loadDraft = useCallback(() => {
@@ -100,45 +103,42 @@ const DrawingWorkspace = () => {
       if (success && data.drawing) {
         const serverData = data.drawing;
 
-        // 如果有本地草稿且比服务器数据新，提示用户恢复
+        // 如果有本地草稿且比服务器数据新，自动恢复草稿
         if (draft) {
           const draftDate = new Date(draft.timestamp);
           const serverDate = new Date(serverData.updatedAt);
 
           if (draftDate > serverDate) {
-            const shouldRestore = window.confirm(
-              `发现本地保存的画图草稿 (${draftDate.toLocaleString()}), 比服务器版本 (${serverDate.toLocaleString()}) 更新。是否恢复草稿？`
-            );
-
-            if (shouldRestore) {
-              setDrawingData(serverData);
-              setExcalidrawData(draft.data || []);
-              toast.info("已恢复本地草稿");
-            } else {
-              localStorage.removeItem(`${STORAGE_KEY_PREFIX}${id}`);
-              setDrawingData(serverData);
-              setExcalidrawData(Array.isArray(serverData.data) ? serverData.data : []);
-            }
+            // 自动使用更新的草稿，不弹出确认对话框
+            setDrawingData(serverData);
+            setExcalidrawData(draft.data || []);
+            setHasUnsavedChanges(true); // 恢复草稿时标记为有未保存的更改
+            toast.info(`已自动恢复更新的本地草稿 (${draftDate.toLocaleString()})`);
           } else {
-            // 服务器数据较新
+            // 服务器数据较新，自动使用服务器数据
             setDrawingData(serverData);
             setExcalidrawData(Array.isArray(serverData.data) ? serverData.data : []);
+            setHasUnsavedChanges(false); // 使用服务器数据时没有未保存的更改
             // 清除较旧的草稿
             localStorage.removeItem(`${STORAGE_KEY_PREFIX}${id}`);
+            toast.info(`已自动使用最新的服务器版本 (${serverDate.toLocaleString()})`);
           }
         } else {
           // 没有草稿，使用服务器数据
           setDrawingData(serverData);
           setExcalidrawData(Array.isArray(serverData.data) ? serverData.data : []);
+          setHasUnsavedChanges(false); // 使用服务器数据时没有未保存的更改
         }
       } else if (draft) {
         // 如果服务器数据获取失败但有本地草稿，使用草稿
         toast.info("使用本地保存的草稿");
         setDrawingData(data.drawing || {});
         setExcalidrawData(draft.data || []);
+        setHasUnsavedChanges(true); // 使用草稿时标记为有未保存的更改
       } else {
         setDrawingData({});
         setExcalidrawData([]);
+        setHasUnsavedChanges(false); // 空数据时没有未保存的更改
       }
     } catch (error) {
       console.error("获取画图数据失败:", error);
@@ -149,6 +149,9 @@ const DrawingWorkspace = () => {
         toast.info("使用本地保存的草稿");
         setDrawingData({});
         setExcalidrawData(draft.data || []);
+        setHasUnsavedChanges(true); // 使用草稿时标记为有未保存的更改
+      } else {
+        setHasUnsavedChanges(false); // 没有数据时没有未保存的更改
       }
     }
   }, [id, loadDraft]);
@@ -180,6 +183,7 @@ const DrawingWorkspace = () => {
         if (success) {
           setLastSaveTime(new Date());
           setIsDirty(false);
+          setHasUnsavedChanges(false); // 保存成功后清除未保存标记
           setSaveStatus('saved');
           // 保存成功后清除本地草稿
           localStorage.removeItem(`${STORAGE_KEY_PREFIX}${id}`);
@@ -189,6 +193,8 @@ const DrawingWorkspace = () => {
           toast.error("自动保存到服务器失败，已保存草稿到本地");
           setSaveStatus('error');
           setSaveError(error || '保存失败');
+          // 保存失败时保持未保存标记
+          setHasUnsavedChanges(true);
         }
       } catch (error) {
         console.error("保存到数据库失败:", error);
@@ -196,6 +202,7 @@ const DrawingWorkspace = () => {
         saveDraft(drawingElements, name);
         setSaveStatus('error');
         setSaveError(error instanceof Error ? error.message : '保存失败');
+        setHasUnsavedChanges(true);
       }
     },
     [drawingData, id, saveDraft]
@@ -249,7 +256,7 @@ const DrawingWorkspace = () => {
   // 页面卸载前保存
   useEffect(() => {
     const handleBeforeUnload = () => {
-      if (isDirty && dataRef.current.length > 0) {
+      if (hasUnsavedChanges && dataRef.current.length > 0) {
         saveDraft(dataRef.current, drawingData?.name || "未命名画图");
       }
     };
@@ -263,7 +270,7 @@ const DrawingWorkspace = () => {
         saveDraft(dataRef.current, drawingData?.name || "未命名画图");
       }
     };
-  }, [drawingData?.name, isDirty, saveDraft]);
+  }, [drawingData?.name, hasUnsavedChanges, saveDraft]);
 
   const onSave = useCallback(async () => {
     if (excalidrawData.length > 0 && drawingData && drawingData.id) {
@@ -284,6 +291,7 @@ const DrawingWorkspace = () => {
         if (success) {
           toast.success("画图保存成功!");
           setIsDirty(false);
+          setHasUnsavedChanges(false); // 保存成功后清除未保存标记
           setLastSaveTime(new Date());
           setSaveStatus('saved');
           // 成功保存到服务器后，可以删除本地草稿
@@ -292,6 +300,7 @@ const DrawingWorkspace = () => {
           toast.error("画图保存失败! 已保存到本地草稿");
           setSaveStatus('error');
           setSaveError(error || '保存失败');
+          setHasUnsavedChanges(true);
         }
       } catch (error) {
         console.error("保存出错:", error);
@@ -299,6 +308,7 @@ const DrawingWorkspace = () => {
         saveDraft(excalidrawData, drawingData?.name || "未命名画图");
         setSaveStatus('error');
         setSaveError(error instanceof Error ? error.message : '保存失败');
+        setHasUnsavedChanges(true);
       }
     } else {
       toast.error("没有可保存的画图数据或缺少必要信息");
@@ -307,12 +317,18 @@ const DrawingWorkspace = () => {
 
   const handleExcalidrawChange = (elements: any) => {
     setExcalidrawData(elements);
-    setIsDirty(true); // 标记为已修改
+    
+    // 只有当数据真正发生变化时才标记为脏状态
+    if (JSON.stringify(elements) !== JSON.stringify(dataRef.current)) {
+      setIsDirty(true); // 标记为已修改
+      setHasUnsavedChanges(true); // 标记有未保存的更改
+    }
   };
 
   // 返回上一页或文件夹
   const handleGoBack = () => {
-    if (isDirty) {
+    // 只有真正有未保存的更改时才显示确认对话框
+    if (hasUnsavedChanges) {
       const shouldLeave = window.confirm("您有未保存的更改，确定要离开吗？");
       if (!shouldLeave) return;
     }
@@ -363,7 +379,7 @@ const DrawingWorkspace = () => {
           </Button>
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 bg-gradient-primary rounded flex items-center justify-center">
-              <Palette className="w-3 h-3 text-white" />
+            <Image src="/logo.png" alt="logo" width={32} height={32} />
             </div>
             <h1 className="text-lg font-semibold text-foreground">
               {drawingData?.name || "画图详情"}
@@ -421,4 +437,4 @@ const DrawingWorkspace = () => {
   );
 };
 
-export default DrawingWorkspace; 
+export default DrawingWorkspace;

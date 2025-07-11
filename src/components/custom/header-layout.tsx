@@ -19,6 +19,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ThemeToggle } from "./theme-toggle";
+import Image from "next/image";
 
 
 
@@ -41,7 +42,7 @@ export const HeaderLayout = ({ children }: HeaderLayoutProps) => {
           {/* Logo 和标题 */}
           <div className="flex items-center space-x-4">
             <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
-              <Palette className="w-4 h-4 text-white" />
+               <Image src="/logo.png" alt="logo" width={32} height={32} />
             </div>
             <h1 className="text-xl font-bold">Drawing</h1>
           </div>

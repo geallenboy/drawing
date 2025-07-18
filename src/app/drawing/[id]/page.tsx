@@ -1,7 +1,7 @@
 "use client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Save, ArrowLeft, Palette } from "lucide-react";
+import { Save, ArrowLeft, Palette, Upload } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
@@ -362,6 +362,63 @@ const DrawingWorkspace = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isDirty, excalidrawData, onSave]);
 
+  // 导入本地数据功能
+  const handleImportData = useCallback(() => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.excalidraw,.json';
+    input.onchange = (event) => {
+      const file = (event.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const content = e.target?.result as string;
+          const importedData = JSON.parse(content);
+          
+          // 检查是否是有效的Excalidraw数据格式
+          if (importedData.elements && Array.isArray(importedData.elements)) {
+            // 如果当前有未保存的更改，提示用户
+            if (hasUnsavedChanges) {
+              const shouldImport = window.confirm("导入数据将替换当前内容，您有未保存的更改，确定要继续吗？");
+              if (!shouldImport) return;
+            }
+            
+            setExcalidrawData(importedData.elements);
+            setIsDirty(true);
+            setHasUnsavedChanges(true);
+            toast.success(`成功导入 ${file.name}`);
+          } else if (Array.isArray(importedData)) {
+            // 直接是元素数组
+            if (hasUnsavedChanges) {
+              const shouldImport = window.confirm("导入数据将替换当前内容，您有未保存的更改，确定要继续吗？");
+              if (!shouldImport) return;
+            }
+            
+            setExcalidrawData(importedData);
+            setIsDirty(true);
+            setHasUnsavedChanges(true);
+            toast.success(`成功导入 ${file.name}`);
+          } else {
+            toast.error("无效的文件格式，请选择有效的Excalidraw文件");
+          }
+        } catch (error) {
+          console.error("导入文件失败:", error);
+          toast.error("文件解析失败，请检查文件格式");
+        }
+      };
+      
+      reader.onerror = () => {
+        toast.error("文件读取失败");
+      };
+      
+      reader.readAsText(file);
+    };
+    
+    input.click();
+  }, [hasUnsavedChanges]);
+
   return (
     <div className="h-screen flex flex-col bg-background">
       {/* 优化的头部导航 */}
@@ -387,8 +444,19 @@ const DrawingWorkspace = () => {
           </div>
         </div>
         
-        {/* 右侧：保存相关控件 */}
+        {/* 右侧：导入和保存相关控件 */}
         <div className="flex items-center gap-3">
+          {/* 导入本地数据按钮 */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleImportData}
+            className="h-9 text-sm gap-2 hover:bg-accent"
+          >
+            <Upload className="h-4 w-4" /> 
+            导入
+          </Button>
+          
           {/* 保存状态指示器 */}
           <SaveStatusIndicator 
             status={saveStatus}

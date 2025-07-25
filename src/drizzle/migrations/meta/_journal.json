@@ -15,6 +15,13 @@
       "when": 1752164405194,
       "tag": "0001_greedy_kinsey_walden",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1753359676004,
+      "tag": "0002_gray_firebird",
+      "breakpoints": true
     }
   ]
 }

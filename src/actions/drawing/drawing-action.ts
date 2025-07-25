@@ -6,7 +6,7 @@ import { ActionResponse, errorResponse, successResponse } from "@/actions";
 import { eq, sql } from "drizzle-orm";
 import { auth } from "@clerk/nextjs/server";
 import { createDrawingWithMinio, getDrawingWithMinioData, updateDrawingWithMinio } from "@/services/drawing/drawing-service";
-import { deleteDrawingData } from "@/lib/minio";
+import { deleteDrawingData } from "@/lib/cloudflare-r2";
 
 
 // 创建新画图
@@ -215,6 +215,13 @@ export async function updateDrawingAction(id: string, formData: FormData | Recor
             updateData.data = typeof data.data === 'string'
                 ? JSON.parse(data.data)
                 : data.data;
+        }
+
+        // 如果有文件数据，也要保存
+        if (data.files !== undefined) {
+            updateData.files = typeof data.files === 'string'
+                ? JSON.parse(data.files)
+                : data.files;
         }
 
         // 使用集成 MinIO 的服务更新画图

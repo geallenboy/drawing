@@ -8,6 +8,8 @@ export const AIDTDrawingTable = pgTable("drawing", {
     desc: text().notNull().default(""),
     // 画图内容 - 存储SVG、Canvas数据或其他格式
     data: jsonb("data").$type<any[]>().notNull().default([]),
+    // 画图文件数据 - 存储图片等文件
+    files: jsonb("files").$type<Record<string, any>>().notNull().default({}),
     // 创建者/所有者
     userId: text().notNull(),
     isFavorite: boolean().notNull().default(false),

@@ -3,7 +3,7 @@
 import { db } from "@/drizzle/db";
 import { AIDTDrawing, AIDTDrawingTable } from "@/drizzle/schemas";
 import { eq, sql } from "drizzle-orm";
-import { uploadDrawingData, getDrawingData, deleteDrawingData } from "@/lib/minio";
+import { uploadDrawingData, getDrawingData, deleteDrawingData } from "@/lib/cloudflare-r2";
 
 // 创建新画图
 export async function createDrawing(data: Omit<AIDTDrawing, "id" | "createdAt" | "updatedAt">): Promise<AIDTDrawing> {
@@ -16,9 +16,9 @@ export async function createDrawing(data: Omit<AIDTDrawing, "id" | "createdAt" |
     return newDrawing;
 }
 
-// 创建新画图（集成 MinIO）
+// 创建新画图（集成 Cloudflare R2）
 export async function createDrawingWithMinio(data: Omit<AIDTDrawing, "id" | "createdAt" | "updatedAt">): Promise<AIDTDrawing> {
-    // 创建画图，将数据同时存储到数据库和MinIO
+    // 创建画图，将数据同时存储到数据库和Cloudflare R2
     const [newDrawing] = await db
         .insert(AIDTDrawingTable)
         .values({
@@ -30,11 +30,11 @@ export async function createDrawingWithMinio(data: Omit<AIDTDrawing, "id" | "cre
 
     if (newDrawing == null) throw new Error("创建画图失败");
 
-    // 如果有画图数据，同时上传到 MinIO 作为备份
+    // 如果有画图数据，同时上传到 Cloudflare R2 作为备份
     if (data.data && Array.isArray(data.data) && data.data.length > 0) {
         try {
             await uploadDrawingData(newDrawing.id, data.data);
-            // 更新 filepath 为 MinIO 路径
+            // 更新 filepath 为 Cloudflare R2 路径
             if (!data.filepath) {
                 await db
                     .update(AIDTDrawingTable)
@@ -42,10 +42,10 @@ export async function createDrawingWithMinio(data: Omit<AIDTDrawing, "id" | "cre
                     .where(eq(AIDTDrawingTable.id, newDrawing.id));
                 newDrawing.filepath = `drawings/${newDrawing.id}.json`;
             }
-            console.log(`✅ 画图数据已同步到数据库和MinIO: ${newDrawing.id}`);
+            console.log(`✅ 画图数据已同步到数据库和Cloudflare R2: ${newDrawing.id}`);
         } catch (error) {
-            console.warn("上传画图数据到 MinIO 失败，但数据库创建成功:", error);
-            // MinIO 上传失败不回滚，因为数据库已有完整数据
+            console.warn("上传画图数据到 Cloudflare R2 失败，但数据库创建成功:", error);
+            // Cloudflare R2 上传失败不回滚，因为数据库已有完整数据
         }
     }
 
@@ -62,33 +62,33 @@ export async function getDrawingById(id: string): Promise<AIDTDrawing | null> {
     return drawing || null;
 }
 
-// 获取画图（包含 MinIO 数据）
+// 获取画图（包含 Cloudflare R2 数据）
 export async function getDrawingWithMinioData(id: string): Promise<AIDTDrawing & { minioData?: any } | null> {
     const drawing = await getDrawingById(id);
     if (!drawing) return null;
 
     try {
-        // 优先使用数据库中的数据，MinIO 作为备份
+        // 优先使用数据库中的数据，Cloudflare R2 作为备份
         if (drawing.data && Array.isArray(drawing.data) && drawing.data.length > 0) {
             console.log(`✅ 从数据库获取画图数据: ${id}`);
             return drawing;
         }
 
-        // 如果数据库中没有数据，尝试从 MinIO 获取
-        const minioData = await getDrawingData(`${id}.json`);
-        if (minioData) {
-            console.log(`✅ 从 MinIO 获取画图数据: ${id}`);
+        // 如果数据库中没有数据，尝试从 Cloudflare R2 获取
+        const r2Data = await getDrawingData(`${id}.json`);
+        if (r2Data) {
+            console.log(`✅ 从 Cloudflare R2 获取画图数据: ${id}`);
             return {
                 ...drawing,
-                data: minioData,
-                minioData
+                data: r2Data,
+                minioData: r2Data // 保持向后兼容的字段名
             };
         }
 
         return drawing;
     } catch (error) {
-        console.warn("从 MinIO 获取画图数据失败:", error);
-        // 如果 MinIO 获取失败，返回数据库中的数据
+        console.warn("从 Cloudflare R2 获取画图数据失败:", error);
+        // 如果 Cloudflare R2 获取失败，返回数据库中的数据
         return drawing;
     }
 }
@@ -116,7 +116,7 @@ export async function updateDrawing(
     return updatedDrawing;
 }
 
-// 更新画图（集成 MinIO）
+// 更新画图（集成 Cloudflare R2）
 export async function updateDrawingWithMinio(
     id: string,
     data: Partial<Omit<typeof AIDTDrawingTable.$inferInsert, "id" | "createdAt" | "updatedAt">>
@@ -125,7 +125,7 @@ export async function updateDrawingWithMinio(
     const updateData = { ...data };
     const drawingData = updateData.data;
     
-    // 将画图数据同时存储到数据库和MinIO以确保数据一致性
+    // 将画图数据同时存储到数据库和Cloudflare R2以确保数据一致性
     const [updatedDrawing] = await db
         .update(AIDTDrawingTable)
         .set({ ...updateData, updatedAt: new Date() })
@@ -134,14 +134,14 @@ export async function updateDrawingWithMinio(
 
     if (updatedDrawing == null) throw new Error("更新画图失败");
 
-    // 如果有画图数据，同时上传到 MinIO 作为备份
+    // 如果有画图数据，同时上传到 Cloudflare R2 作为备份
     if (drawingData) {
         try {
             await uploadDrawingData(id, drawingData);
-            console.log(`✅ 画图数据已同步到数据库和MinIO: ${id}`);
+            console.log(`✅ 画图数据已同步到数据库和Cloudflare R2: ${id}`);
         } catch (error) {
-            console.warn("同步画图数据到 MinIO 失败，但数据库更新成功:", error);
-            // MinIO 同步失败不影响主要功能，数据库已有完整数据
+            console.warn("同步画图数据到 Cloudflare R2 失败，但数据库更新成功:", error);
+            // Cloudflare R2 同步失败不影响主要功能，数据库已有完整数据
         }
     }
 

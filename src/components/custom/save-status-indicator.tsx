@@ -1,9 +1,9 @@
 "use client";
 import React from "react";
-import { Check, Clock, AlertCircle, Wifi, WifiOff } from "lucide-react";
+import { Check, Clock, AlertCircle, Wifi, WifiOff, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
-export type SaveStatus = 'idle' | 'saving' | 'saved' | 'error' | 'offline';
+export type SaveStatus = 'idle' | 'saving' | 'saved' | 'error' | 'offline' | 'loading';
 
 interface SaveStatusIndicatorProps {
   status: SaveStatus;
@@ -18,6 +18,13 @@ const SaveStatusIndicator: React.FC<SaveStatusIndicatorProps> = ({
 }) => {
   const getStatusConfig = () => {
     switch (status) {
+      case 'loading':
+        return {
+          icon: <Loader2 className="h-3 w-3 animate-pulse" />,
+          text: 'Loading...',
+          variant: 'secondary' as const,
+          className: 'text-blue-600 border-blue-200'
+        };
       case 'saving':
         return {
           icon: <Clock className="h-3 w-3 animate-pulse" />,

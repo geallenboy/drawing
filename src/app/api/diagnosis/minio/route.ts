@@ -1,25 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { isMinioAvailable } from '@/lib/minio';
+import { isR2Available } from '@/lib/cloudflare-r2';
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('🔍 开始测试MinIO连接...');
+    console.log('🔍 开始测试Cloudflare R2连接...');
     
-    const isAvailable = await isMinioAvailable();
+    const isAvailable = await isR2Available();
     
     if (isAvailable) {
       return NextResponse.json({
         success: true,
-        message: 'MinIO连接测试成功'
+        message: 'Cloudflare R2连接测试成功'
       });
     } else {
       return NextResponse.json({
         success: false,
-        error: 'MinIO连接测试失败'
+        error: 'Cloudflare R2连接测试失败'
       });
     }
   } catch (error) {
-    console.error('❌ MinIO连接测试失败:', error);
+    console.error('❌ Cloudflare R2连接测试失败:', error);
     
     return NextResponse.json({
       success: false,

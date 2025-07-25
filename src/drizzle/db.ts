@@ -54,10 +54,16 @@ export const db = drizzle({
   connection: {
     connectionString: createConnectionConfig(),
     ssl: getSSLConfig(),
-    // 连接池配置
-    max: 20,
-    idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 2000,
+    // 连接池配置 - 增加超时时间和重试机制
+    max: 10,
+    idleTimeoutMillis: 60000,
+    connectionTimeoutMillis: 10000,
+    // 添加重试配置
+    acquireTimeoutMillis: 60000,
+    createTimeoutMillis: 30000,
+    destroyTimeoutMillis: 5000,
+    reapIntervalMillis: 1000,
+    createRetryIntervalMillis: 200,
   }
 })
 

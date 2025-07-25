@@ -1,372 +1,221 @@
 "use client";
-import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Save, ArrowLeft, Palette, Upload } from "lucide-react";
+
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import dynamic from "next/dynamic";
-import { getDrawingWithDataAction, updateDrawingAction } from "@/actions/drawing/drawing-action";
-import { useBeforeUnload } from "react-use";
-import SaveStatusIndicator, { SaveStatus } from "@/components/custom/save-status-indicator";
 import { useTheme } from "next-themes";
+import { useBeforeUnload } from "react-use";
+import dynamic from "next/dynamic";
+import { toast } from "sonner";
+
+// UI Components
+import { Button } from "@/components/ui/button";
+import { Save, ArrowLeft, Upload, Share, Download } from "lucide-react";
+import SaveStatusIndicator, { SaveStatus } from "@/components/custom/save-status-indicator";
 import Image from "next/image";
 
-// 本地存储键前缀
-const STORAGE_KEY_PREFIX = "drawing_autosave_";
-// 自动保存到数据库的间隔 (300秒)
-const AUTO_SAVE_INTERVAL = 300000;
-// 自动保存到本地的间隔 (10秒)
-const LOCAL_SAVE_INTERVAL = 10000;
-// 草稿过期时间 (24小时)
-const DRAFT_EXPIRY_HOURS = 24;
+// Actions
+import { getDrawingWithDataAction, updateDrawingAction } from "@/actions/drawing/drawing-action";
 
-const Excalidraw = dynamic(() => import("@excalidraw/excalidraw").then((mod) => mod.Excalidraw), {
-  ssr: false
-});
+// Types
+interface ExcalidrawData {
+  elements: any[];
+  files: Record<string, any>;
+  appState?: any;
+}
 
-const DrawingWorkspace = () => {
+interface DrawingState {
+  id: string;
+  name: string;
+  data: ExcalidrawData;
+  isLoaded: boolean;
+  isDirty: boolean;
+  lastSaved: Date | null;
+}
+
+// Dynamic import Excalidraw
+const Excalidraw = dynamic(
+  () => import("@excalidraw/excalidraw").then((mod) => mod.Excalidraw),
+  { ssr: false }
+);
+
+// Constants
+const AUTO_SAVE_INTERVAL = 30000; // 30秒自动保存
+const DEBOUNCE_DELAY = 1000; // 1秒防抖
+
+const DrawingEditor: React.FC = () => {
   const params = useParams();
   const router = useRouter();
   const { resolvedTheme } = useTheme();
-  const id = (params.id || "") as string;
-  const [excalidrawData, setExcalidrawData] = useState<any[]>([]);
-  const [drawingData, setDrawingData] = useState<any>();
-  const [isDirty, setIsDirty] = useState(false); // 是否修改
-  const [lastSaveTime, setLastSaveTime] = useState<Date | null>(null);
-  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
+  const drawingId = params.id as string;
+
+  // Core State
+  const [drawing, setDrawing] = useState<DrawingState>({
+    id: drawingId,
+    name: "",
+    data: { elements: [], files: {} },
+    isLoaded: false,
+    isDirty: false,
+    lastSaved: null,
+  });
+
+  // 用于强制Excalidraw重新挂载的key
+  const [excalidrawKey, setExcalidrawKey] = useState(0);
+
+  // UI State
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const [saveError, setSaveError] = useState<string>("");
-  // 新增：标记是否真正需要保存提示
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
-  const dataRef = useRef<any>([]);
-  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  // Refs
+  const saveTimeoutRef = useRef<NodeJS.Timeout>();
+  const autoSaveIntervalRef = useRef<NodeJS.Timeout>();
+  const lastChangeRef = useRef<number>(0);
 
-  // 当用户想要离开页面时，只有真正有未保存的更改时才显示确认对话框
-  useBeforeUnload(hasUnsavedChanges, "您有未保存的画图更改，确定要离开吗？");
+  // Prevent navigation when unsaved changes exist
+  useBeforeUnload(drawing.isDirty, "您有未保存的更改，确定要离开吗？");
 
-  // 从本地存储中加载草稿
-  const loadDraft = useCallback(() => {
-    if (typeof window === "undefined" || !id) return null;
-
+  // Load drawing data
+  const loadDrawing = useCallback(async () => {
     try {
-      const savedDraft = localStorage.getItem(`${STORAGE_KEY_PREFIX}${id}`);
-      if (savedDraft) {
-        const { data, name, timestamp } = JSON.parse(savedDraft);
+      setSaveStatus("loading");
+      const { data, success, error } = await getDrawingWithDataAction(drawingId);
 
-        // 检查草稿是否在24小时内
-        const draftTime = new Date(timestamp);
-        const now = new Date();
-        const hoursSinceSave = (now.getTime() - draftTime.getTime()) / (1000 * 60 * 60);
-
-        if (hoursSinceSave < DRAFT_EXPIRY_HOURS) {
-          return { data, name, timestamp };
-        } else {
-          // 清除过期草稿
-          localStorage.removeItem(`${STORAGE_KEY_PREFIX}${id}`);
-        }
-      }
-    } catch (error) {
-      console.error("加载草稿失败:", error);
-    }
-
-    return null;
-  }, [id]);
-
-  // 保存草稿到本地存储
-  const saveDraft = useCallback(
-    (drawingElements: any[], name: string) => {
-      if (typeof window === "undefined" || !id) return;
-
-      try {
-        const draftData = {
-          data: drawingElements,
-          name,
-          timestamp: new Date().toISOString()
-        };
-
-        localStorage.setItem(`${STORAGE_KEY_PREFIX}${id}`, JSON.stringify(draftData));
-      } catch (error) {
-        console.error("保存草稿失败:", error);
-      }
-    },
-    [id]
-  );
-
-  // 获取画图数据或从本地存储中恢复
-  const getDrawingData = useCallback(async () => {
-    try {
-      const { data, success } = await getDrawingWithDataAction(id);
-
-      // 查找本地草稿
-      const draft = loadDraft();
-
-      if (success && data.drawing) {
-        const serverData = data.drawing;
-
-        // 如果有本地草稿且比服务器数据新，自动恢复草稿
-        if (draft) {
-          const draftDate = new Date(draft.timestamp);
-          const serverDate = new Date(serverData.updatedAt);
-
-          if (draftDate > serverDate) {
-            // 自动使用更新的草稿，不弹出确认对话框
-            setDrawingData(serverData);
-            setExcalidrawData(draft.data || []);
-            setHasUnsavedChanges(true); // 恢复草稿时标记为有未保存的更改
-            toast.info(`已自动恢复更新的本地草稿 (${draftDate.toLocaleString()})`);
-          } else {
-            // 服务器数据较新，自动使用服务器数据
-            setDrawingData(serverData);
-            setExcalidrawData(Array.isArray(serverData.data) ? serverData.data : []);
-            setHasUnsavedChanges(false); // 使用服务器数据时没有未保存的更改
-            // 清除较旧的草稿
-            localStorage.removeItem(`${STORAGE_KEY_PREFIX}${id}`);
-            toast.info(`已自动使用最新的服务器版本 (${serverDate.toLocaleString()})`);
-          }
-        } else {
-          // 没有草稿，使用服务器数据
-          setDrawingData(serverData);
-          setExcalidrawData(Array.isArray(serverData.data) ? serverData.data : []);
-          setHasUnsavedChanges(false); // 使用服务器数据时没有未保存的更改
-        }
-      } else if (draft) {
-        // 如果服务器数据获取失败但有本地草稿，使用草稿
-        toast.info("使用本地保存的草稿");
-        setDrawingData(data.drawing || {});
-        setExcalidrawData(draft.data || []);
-        setHasUnsavedChanges(true); // 使用草稿时标记为有未保存的更改
-      } else {
-        setDrawingData({});
-        setExcalidrawData([]);
-        setHasUnsavedChanges(false); // 空数据时没有未保存的更改
-      }
-    } catch (error) {
-      console.error("获取画图数据失败:", error);
-
-      // 尝试使用本地草稿
-      const draft = loadDraft();
-      if (draft) {
-        toast.info("使用本地保存的草稿");
-        setDrawingData({});
-        setExcalidrawData(draft.data || []);
-        setHasUnsavedChanges(true); // 使用草稿时标记为有未保存的更改
-      } else {
-        setHasUnsavedChanges(false); // 没有数据时没有未保存的更改
-      }
-    }
-  }, [id, loadDraft]);
-
-  useEffect(() => {
-    id && getDrawingData();
-  }, [id, getDrawingData]);
-
-  // 更新引用值
-  useEffect(() => {
-    dataRef.current = excalidrawData;
-  }, [excalidrawData]);
-
-  // 节流保存到数据库
-  const saveToDatabase = useCallback(
-    async (drawingElements: any[], name: string) => {
-      if (!drawingData || !drawingData.id) return;
-
-      try {
-        setSaveStatus('saving');
-        setSaveError('');
-        
-        const { success, error } = await updateDrawingAction(drawingData.id, {
-          ...drawingData,
-          name,
-          data: drawingElements
+      if (success && data?.drawing) {
+        const drawingData = data.drawing;
+        setDrawing({
+          id: drawingId,
+          name: drawingData.name || "未命名画图",
+          data: {
+            elements: Array.isArray(drawingData.data) ? drawingData.data : [],
+            files: drawingData.files || {},
+          },
+          isLoaded: true,
+          isDirty: false,
+          lastSaved: drawingData.updatedAt ? new Date(drawingData.updatedAt) : null,
         });
-        
-        if (success) {
-          setLastSaveTime(new Date());
-          setIsDirty(false);
-          setHasUnsavedChanges(false); // 保存成功后清除未保存标记
-          setSaveStatus('saved');
-          // 保存成功后清除本地草稿
-          localStorage.removeItem(`${STORAGE_KEY_PREFIX}${id}`);
-        } else {
-          // 如果保存失败，保留本地草稿
-          saveDraft(drawingElements, name);
-          toast.error("自动保存到服务器失败，已保存草稿到本地");
-          setSaveStatus('error');
-          setSaveError(error || '保存失败');
-          // 保存失败时保持未保存标记
-          setHasUnsavedChanges(true);
-        }
-      } catch (error) {
-        console.error("保存到数据库失败:", error);
-        // 保存失败时，确保草稿存在
-        saveDraft(drawingElements, name);
-        setSaveStatus('error');
-        setSaveError(error instanceof Error ? error.message : '保存失败');
-        setHasUnsavedChanges(true);
+        setSaveStatus("idle");
+        toast.success("画图加载成功");
+      } else {
+        throw new Error(error || "加载画图失败");
       }
-    },
-    [drawingData, id, saveDraft]
-  );
+    } catch (error) {
+      console.error("加载画图失败:", error);
+      setSaveStatus("error");
+      setSaveError(error instanceof Error ? error.message : "加载失败");
+      toast.error("加载画图失败");
+    }
+  }, [drawingId]);
 
-  // 设置自动保存定时器
-  const setupAutoSave = useCallback(() => {
-    // 清除现有定时器
+  // Save drawing data
+  const saveDrawing = useCallback(async (showToast = true) => {
+    if (!drawing.isDirty || !drawing.isLoaded) return;
+
+    try {
+      setSaveStatus("saving");
+      setSaveError("");
+
+      const { success, error } = await updateDrawingAction(drawingId, {
+        name: drawing.name,
+        data: drawing.data.elements,
+        files: drawing.data.files,
+      });
+
+      if (success) {
+        setDrawing(prev => ({
+          ...prev,
+          isDirty: false,
+          lastSaved: new Date(),
+        }));
+        setSaveStatus("saved");
+        if (showToast) {
+          toast.success("保存成功");
+        }
+      } else {
+        throw new Error(error || "保存失败");
+      }
+    } catch (error) {
+      console.error("保存失败:", error);
+      setSaveStatus("error");
+      setSaveError(error instanceof Error ? error.message : "保存失败");
+      if (showToast) {
+        toast.error("保存失败");
+      }
+    }
+  }, [drawingId, drawing.isDirty, drawing.isLoaded, drawing.name, drawing.data]);
+
+  // Debounced save
+  const debouncedSave = useCallback(() => {
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
     }
+    saveTimeoutRef.current = setTimeout(() => {
+      saveDrawing(false);
+    }, DEBOUNCE_DELAY);
+  }, [saveDrawing]);
 
-    // 创建新的自动保存定时器
-    saveTimeoutRef.current = setTimeout(async () => {
-      if (isDirty && dataRef.current.length > 0) {
-        try {
-          await saveToDatabase(dataRef.current, drawingData?.name || "未命名画图");
-          toast.success("画图已自动保存");
-        } catch (error) {
-          console.error("自动保存失败:", error);
-        }
-      }
-    }, AUTO_SAVE_INTERVAL);
-  }, [isDirty, drawingData?.name, saveToDatabase]);
-
-  // 当内容变为脏状态时，设置自动保存
-  useEffect(() => {
-    if (isDirty) {
-      setupAutoSave();
-    }
-
-    return () => {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
-      }
-    };
-  }, [isDirty, setupAutoSave]);
-
-  // 设置定期本地备份
-  useEffect(() => {
-    // 定期保存本地草稿
-    const draftInterval = setInterval(() => {
-      if (isDirty && dataRef.current.length > 0) {
-        saveDraft(dataRef.current, drawingData?.name || "未命名画图");
-      }
-    }, LOCAL_SAVE_INTERVAL);
-
-    return () => clearInterval(draftInterval);
-  }, [isDirty, drawingData?.name, saveDraft]);
-
-  // 页面卸载前保存
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      if (hasUnsavedChanges && dataRef.current.length > 0) {
-        saveDraft(dataRef.current, drawingData?.name || "未命名画图");
-      }
-    };
-
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-
-      // 卸载时自动保存到本地
-      if (dataRef.current.length > 0) {
-        saveDraft(dataRef.current, drawingData?.name || "未命名画图");
-      }
-    };
-  }, [drawingData?.name, hasUnsavedChanges, saveDraft]);
-
-  const onSave = useCallback(async () => {
-    if (excalidrawData.length > 0 && drawingData && drawingData.id) {
-      try {
-        setSaveStatus('saving');
-        setSaveError('');
-        
-        // 立即保存到本地存储作为备份
-        saveDraft(excalidrawData, drawingData?.name || "未命名画图");
-
-        // 保存到数据库
-        const { success, error } = await updateDrawingAction(drawingData.id, {
-          ...drawingData,
-          name: drawingData?.name || "未命名画图",
-          data: excalidrawData
-        });
-
-        if (success) {
-          toast.success("画图保存成功!");
-          setIsDirty(false);
-          setHasUnsavedChanges(false); // 保存成功后清除未保存标记
-          setLastSaveTime(new Date());
-          setSaveStatus('saved');
-          // 成功保存到服务器后，可以删除本地草稿
-          localStorage.removeItem(`${STORAGE_KEY_PREFIX}${id}`);
-        } else {
-          toast.error("画图保存失败! 已保存到本地草稿");
-          setSaveStatus('error');
-          setSaveError(error || '保存失败');
-          setHasUnsavedChanges(true);
-        }
-      } catch (error) {
-        console.error("保存出错:", error);
-        toast.error("画图保存失败! 尝试保存到本地");
-        saveDraft(excalidrawData, drawingData?.name || "未命名画图");
-        setSaveStatus('error');
-        setSaveError(error instanceof Error ? error.message : '保存失败');
-        setHasUnsavedChanges(true);
-      }
-    } else {
-      toast.error("没有可保存的画图数据或缺少必要信息");
-    }
-  }, [excalidrawData, drawingData, saveDraft, id]);
-
-  const handleExcalidrawChange = (elements: any) => {
-    setExcalidrawData(elements);
+  // Handle Excalidraw changes
+  const handleExcalidrawChange = useCallback((elements: any, appState: any, files: any) => {
+    const now = Date.now();
     
-    // 只有当数据真正发生变化时才标记为脏状态
-    if (JSON.stringify(elements) !== JSON.stringify(dataRef.current)) {
-      setIsDirty(true); // 标记为已修改
-      setHasUnsavedChanges(true); // 标记有未保存的更改
+    // 防止过于频繁的更新
+    if (now - lastChangeRef.current < 100) {
+      return;
     }
-  };
+    lastChangeRef.current = now;
 
-  // 返回上一页或文件夹
-  const handleGoBack = () => {
-    // 只有真正有未保存的更改时才显示确认对话框
-    if (hasUnsavedChanges) {
-      const shouldLeave = window.confirm("您有未保存的更改，确定要离开吗？");
-      if (!shouldLeave) return;
-    }
-    
-    // 返回到首页，如果有父文件夹则通过 URL 参数传递
-    if (drawingData?.parentFolderId) {
-      router.push(`/?folder=${drawingData.parentFolderId}`);
-    } else {
-      router.push("/");
-    }
-  };
+    setDrawing(prev => {
+      const newData = {
+        elements: elements || [],
+        files: files || {},
+        appState,
+      };
 
-  // 键盘快捷键支持
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Ctrl+S 或 Cmd+S 保存
-      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-        e.preventDefault();
-        if (isDirty && excalidrawData.length > 0) {
-          onSave();
-        }
+      // 检查是否真的有变化
+      const hasElementsChanged = JSON.stringify(newData.elements) !== JSON.stringify(prev.data.elements);
+      const hasFilesChanged = JSON.stringify(newData.files) !== JSON.stringify(prev.data.files);
+
+      if (!hasElementsChanged && !hasFilesChanged) {
+        return prev;
       }
-      
-      // Esc 键清除选择状态（如果需要）
-      if (e.key === 'Escape') {
-        // 可以在这里添加其他 Esc 键行为
-      }
-    };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isDirty, excalidrawData, onSave]);
+      return {
+        ...prev,
+        data: newData,
+        isDirty: true,
+      };
+    });
 
-  // 导入本地数据功能
-  const handleImportData = useCallback(() => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.excalidraw,.json';
+    // 自动保存（防抖）
+    debouncedSave();
+  }, [debouncedSave]);
+
+  // Manual save
+  const handleManualSave = useCallback(() => {
+    saveDrawing(true);
+  }, [saveDrawing]);
+
+  // Export drawing
+  const handleExport = useCallback(() => {
+    const dataStr = JSON.stringify({
+      type: "excalidraw",
+      version: 2,
+      elements: drawing.data.elements,
+      files: drawing.data.files,
+    });
+    const dataBlob = new Blob([dataStr], { type: "application/json" });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${drawing.name}.excalidraw`;
+    link.click();
+    URL.revokeObjectURL(url);
+    toast.success("导出成功");
+  }, [drawing.data, drawing.name]);
+
+  // Import drawing
+  const handleImport = useCallback(() => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".excalidraw,.json";
     input.onchange = (event) => {
       const file = (event.target as HTMLInputElement).files?.[0];
       if (!file) return;
@@ -377,117 +226,174 @@ const DrawingWorkspace = () => {
           const content = e.target?.result as string;
           const importedData = JSON.parse(content);
           
-          // 检查是否是有效的Excalidraw数据格式
           if (importedData.elements && Array.isArray(importedData.elements)) {
-            // 如果当前有未保存的更改，提示用户
-            if (hasUnsavedChanges) {
-              const shouldImport = window.confirm("导入数据将替换当前内容，您有未保存的更改，确定要继续吗？");
+            if (drawing.isDirty) {
+              const shouldImport = window.confirm("导入将替换当前内容，您有未保存的更改，确定要继续吗？");
               if (!shouldImport) return;
             }
             
-            setExcalidrawData(importedData.elements);
-            setIsDirty(true);
-            setHasUnsavedChanges(true);
-            toast.success(`成功导入 ${file.name}`);
-          } else if (Array.isArray(importedData)) {
-            // 直接是元素数组
-            if (hasUnsavedChanges) {
-              const shouldImport = window.confirm("导入数据将替换当前内容，您有未保存的更改，确定要继续吗？");
-              if (!shouldImport) return;
-            }
+            setDrawing(prev => ({
+              ...prev,
+              data: {
+                elements: importedData.elements,
+                files: importedData.files || {},
+                appState: importedData.appState || prev.data.appState,
+              },
+              isDirty: true,
+            }));
             
-            setExcalidrawData(importedData);
-            setIsDirty(true);
-            setHasUnsavedChanges(true);
+            // 强制Excalidraw重新挂载以正确渲染导入的数据
+            setExcalidrawKey(prev => prev + 1);
+            
             toast.success(`成功导入 ${file.name}`);
           } else {
-            toast.error("无效的文件格式，请选择有效的Excalidraw文件");
+            toast.error("无效的文件格式");
           }
         } catch (error) {
-          console.error("导入文件失败:", error);
-          toast.error("文件解析失败，请检查文件格式");
+          console.error("导入失败:", error);
+          toast.error("文件解析失败");
         }
       };
-      
-      reader.onerror = () => {
-        toast.error("文件读取失败");
-      };
-      
       reader.readAsText(file);
     };
-    
     input.click();
-  }, [hasUnsavedChanges]);
+  }, [drawing.isDirty]);
+
+  // Share drawing
+  const handleShare = useCallback(async () => {
+    try {
+      const url = window.location.href;
+      if (navigator.share) {
+        await navigator.share({
+          title: drawing.name,
+          url: url,
+        });
+      } else {
+        await navigator.clipboard.writeText(url);
+        toast.success("链接已复制到剪贴板");
+      }
+    } catch (error) {
+      console.error("分享失败:", error);
+      toast.error("分享失败");
+    }
+  }, [drawing.name]);
+
+  // Go back
+  const handleGoBack = useCallback(() => {
+    if (drawing.isDirty) {
+      const shouldLeave = window.confirm("您有未保存的更改，确定要离开吗？");
+      if (!shouldLeave) return;
+    }
+    router.push("/");
+  }, [drawing.isDirty, router]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+        e.preventDefault();
+        handleManualSave();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleManualSave]);
+
+  // Auto save interval
+  useEffect(() => {
+    autoSaveIntervalRef.current = setInterval(() => {
+      if (drawing.isDirty) {
+        saveDrawing(false);
+      }
+    }, AUTO_SAVE_INTERVAL);
+
+    return () => {
+      if (autoSaveIntervalRef.current) {
+        clearInterval(autoSaveIntervalRef.current);
+      }
+    };
+  }, [drawing.isDirty, saveDrawing]);
+
+  // Load data on mount
+  useEffect(() => {
+    loadDrawing();
+  }, [loadDrawing]);
+
+  // Cleanup
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+      if (autoSaveIntervalRef.current) {
+        clearInterval(autoSaveIntervalRef.current);
+      }
+    };
+  }, []);
 
   return (
     <div className="h-screen flex flex-col bg-background">
-      {/* 优化的头部导航 */}
-      <div className="flex items-center justify-between p-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        {/* 左侧：返回按钮和标题 */}
+      {/* Header */}
+      <div className="flex items-center justify-between p-4 border-b bg-background/95 backdrop-blur">
+        {/* Left Side */}
         <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleGoBack}
-            className="flex items-center gap-2 hover:bg-accent"
-          >
-            <ArrowLeft className="h-4 w-4" />
+          <Button variant="ghost" size="sm" onClick={handleGoBack}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
             返回
           </Button>
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 bg-gradient-primary rounded flex items-center justify-center">
-            <Image src="/logo.png" alt="logo" width={32} height={32} />
+              <Image src="/logo.png" alt="logo" width={24} height={24} />
             </div>
-            <h1 className="text-lg font-semibold text-foreground">
-              {drawingData?.name || "画图详情"}
-            </h1>
+            <h1 className="text-lg font-semibold">{drawing.name}</h1>
           </div>
         </div>
-        
-        {/* 右侧：导入和保存相关控件 */}
-        <div className="flex items-center gap-3">
-          {/* 导入本地数据按钮 */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleImportData}
-            className="h-9 text-sm gap-2 hover:bg-accent"
-          >
-            <Upload className="h-4 w-4" /> 
+
+        {/* Right Side */}
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={handleImport}>
+            <Upload className="h-4 w-4 mr-2" />
             导入
           </Button>
           
-          {/* 保存状态指示器 */}
-          <SaveStatusIndicator 
+          <Button variant="outline" size="sm" onClick={handleExport}>
+            <Download className="h-4 w-4 mr-2" />
+            导出
+          </Button>
+          
+          <Button variant="outline" size="sm" onClick={handleShare}>
+            <Share className="h-4 w-4 mr-2" />
+            分享
+          </Button>
+
+          <SaveStatusIndicator
             status={saveStatus}
-            lastSaveTime={lastSaveTime}
+            lastSaveTime={drawing.lastSaved}
             errorMessage={saveError}
           />
-          
-          {/* 快捷键提示 */}
-          <div className="text-xs text-muted-foreground hidden sm:block">
-            Ctrl+S 保存
-          </div>
-          
+
           <Button
-            className="h-9 text-sm gap-2 bg-primary hover:bg-primary/90 disabled:opacity-50"
-            onClick={onSave}
-            disabled={!isDirty || !excalidrawData.length || saveStatus === 'saving'}
+            onClick={handleManualSave}
+            disabled={!drawing.isDirty || saveStatus === "saving"}
+            size="sm"
           >
-            <Save className="h-4 w-4" /> 
-            {saveStatus === 'saving' ? "保存中..." : isDirty ? "保存" : "已保存"}
+            <Save className="h-4 w-4 mr-2" />
+            {saveStatus === "saving" ? "保存中..." : drawing.isDirty ? "保存" : "已保存"}
           </Button>
         </div>
       </div>
 
-      {/* 绘图画布区域 - 占满剩余空间 */}
+      {/* Canvas Area */}
       <div className="flex-1 relative">
-        {drawingData && (
+        {drawing.isLoaded ? (
           <Excalidraw
+            key={`excalidraw-${drawingId}-${excalidrawKey}`}
             langCode="zh-CN"
             theme={resolvedTheme === "dark" ? "dark" : "light"}
             initialData={{
-              elements: Array.isArray(excalidrawData) ? excalidrawData : []
+              elements: drawing.data.elements,
+              files: drawing.data.files,
             }}
             onChange={handleExcalidrawChange}
             UIOptions={{
@@ -495,14 +401,21 @@ const DrawingWorkspace = () => {
                 saveToActiveFile: false,
                 loadScene: false,
                 export: false,
-                toggleTheme: false
-              }
+                toggleTheme: false,
+              },
             }}
           />
+        ) : (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+              <p className="text-muted-foreground">加载画图数据中...</p>
+            </div>
+          </div>
         )}
       </div>
     </div>
   );
 };
 
-export default DrawingWorkspace;
+export default DrawingEditor;

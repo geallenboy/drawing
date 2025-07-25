@@ -68,9 +68,11 @@ export async function createOrUpdateUser(userData: CreateUserData) {
 }
 
 /**
- * 根据ID获取用户信息
+ * 根据ID获取用户信息（带重试机制）
  */
-export async function getUserById(userId: string) {
+export async function getUserById(userId: string, retryCount = 0) {
+  const maxRetries = 3;
+  
   try {
     const user = await db
       .select()
@@ -83,7 +85,19 @@ export async function getUserById(userId: string) {
       user: user[0] || null,
     };
   } catch (error) {
-    console.error('获取用户信息失败:', error);
+    console.error(`获取用户信息失败 (尝试 ${retryCount + 1}/${maxRetries + 1}):`, error);
+    
+    // 如果是连接错误且还有重试次数，则重试
+    if (retryCount < maxRetries && 
+        error instanceof Error && 
+        (error.message.includes('Connection') || error.message.includes('timeout'))) {
+      
+      console.log(`等待 ${(retryCount + 1) * 1000}ms 后重试...`);
+      await new Promise(resolve => setTimeout(resolve, (retryCount + 1) * 1000));
+      
+      return getUserById(userId, retryCount + 1);
+    }
+    
     return {
       success: false,
       error: '获取用户信息失败',

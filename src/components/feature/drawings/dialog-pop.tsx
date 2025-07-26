@@ -94,7 +94,7 @@ const DialogPop = ({ currentFolderId }: { currentFolderId?: string | null }) => 
         setOpen(false);
         setName("");
         setDescription("");
-        router.push(`/drawing/${data.drawing.id}`);
+        router.push(`/drawings/${data.drawing.id}`);
       } else {
         toast.error(error || "创建画图失败");
       }

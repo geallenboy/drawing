@@ -79,9 +79,6 @@ const getExportToCanvas = async () => {
 };
 
 // Constants
-const AUTO_SAVE_INTERVAL = 10000; // 10秒自动保存
-const DEBOUNCE_DELAY = 500; // 500ms防抖，更快响应
-const IMMEDIATE_SAVE_DELAY = 100; // 立即保存的短延迟
 const MAX_RETRY_ATTEMPTS = 3; // 最大重试次数
 const LOCAL_STORAGE_KEY_PREFIX = 'drawing_cache_'; // localStorage前缀
 const LOCAL_SAVE_DEBOUNCE = 200; // 本地保存防抖时间
@@ -292,13 +289,12 @@ const DrawingEditor: React.FC = () => {
 
     try {
       setSaveStatus("saving");
-      // setDrawing(prev => ({ ...prev, error: null }));
+      setDrawing(prev => ({ ...prev, error: null }));
 
       const { data, success, error } = await getDrawingWithDataAction(drawingId);
 
       if (success && data?.drawing) {
         const drawingData = data.drawing;
-        console.log(drawingData,"drawingData");
         // 构建元数据对象
         const metadata: DrawingMetadata = {
           id: drawingData.id,
@@ -366,7 +362,7 @@ const DrawingEditor: React.FC = () => {
     } finally {
       isLoadingRef.current = false;
     }
-  }, [drawingId]);
+  }, [drawingId, loadFromLocalStorage]);
 
   // Enhanced save function with retry logic
   const saveDrawing = useCallback(async (showToast = true) => {
@@ -376,24 +372,29 @@ const DrawingEditor: React.FC = () => {
       setSaveStatus("saving");
       setSaveError("");
 
-      const { success, error } = await updateDrawingAction(drawingId, {
+      const { success, error, data: responseData } = await updateDrawingAction(drawingId, {
         data: drawing.data.elements,
         files: drawing.data.files,
         appState: drawing.data.appState,
+        // 不传递 name, desc, parentFolderId 等元数据，只更新绘图内容
       });
 
       if (success) {
         const now = new Date();
+        // 使用服务端返回的数据来确保数据一致性，但保持原有的name
+        const updatedDrawing = responseData?.drawing;
         setDrawing(prev => ({
           ...prev,
           isDirty: false,
           lastSaved: now,
           metadata: prev.metadata ? {
             ...prev.metadata,
-            version: prev.metadata.version + 1,
+            // 保持原有的name和desc，只更新从服务端返回的其他字段
+            version: updatedDrawing?.version || (prev.metadata.version + 1),
             elementCount: drawing.data.elements.length,
             fileCount: Object.keys(drawing.data.files).length,
-            lastModified: now,
+            lastModified: updatedDrawing?.lastModified ? new Date(updatedDrawing.lastModified) : now,
+            updatedAt: updatedDrawing?.updatedAt ? new Date(updatedDrawing.updatedAt) : now,
           } : null,
           error: null,
         }));
@@ -433,7 +434,7 @@ const DrawingEditor: React.FC = () => {
         }
       }
     }
-  }, [drawingId, drawing.isDirty, drawing.isLoaded, drawing.metadata, drawing.data, saveStatus, retryCount]);
+  }, [drawingId, drawing.isDirty, drawing.isLoaded, drawing.data, saveStatus, retryCount, clearLocalStorage]);
 
   // 移除防抖保存 - 不再自动同步到R2服务器
 
@@ -774,11 +775,14 @@ const DrawingEditor: React.FC = () => {
   // Cleanup
   useEffect(() => {
     return () => {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
+      const saveTimeout = saveTimeoutRef.current;
+      const autoSaveInterval = autoSaveIntervalRef.current;
+      
+      if (saveTimeout) {
+        clearTimeout(saveTimeout);
       }
-      if (autoSaveIntervalRef.current) {
-        clearInterval(autoSaveIntervalRef.current);
+      if (autoSaveInterval) {
+        clearInterval(autoSaveInterval);
       }
     };
   }, []);

@@ -82,24 +82,40 @@ export class DrawingStorageManager {
         .select()
         .from(AIDTDrawingTable)
         .where(eq(AIDTDrawingTable.id, drawingId));
-
       if (!drawing) {
         throw new Error("画图不存在");
       }
 
       // 2. 从R2获取数据
-      if (!drawing.dataPath) {
-        throw new Error("画图数据路径不存在，可能未正确保存到R2");
+      // 如果dataPath为空或为临时值，说明是新画图，返回默认空数据
+      if (!drawing.dataPath || drawing.dataPath === "temp") {
+        console.log(`画图 ${drawingId} 是新创建的画图，返回默认空数据`);
+        return {
+          metadata: drawing,
+          elements: [],
+          files: {},
+          appState: {},
+        };
       }
 
-      const content = await R2StorageInterface.getDrawing(drawingId);
-
-      return {
-        metadata: drawing,
-        elements: content.elements,
-        files: content.files,
-        appState: content.appState,
-      };
+      try {
+        const content = await R2StorageInterface.getDrawing(drawingId);
+        return {
+          metadata: drawing,
+          elements: content.elements,
+          files: content.files,
+          appState: content.appState,
+        };
+      } catch (r2Error) {
+        console.warn(`从R2加载画图 ${drawingId} 失败，返回默认空数据:`, r2Error);
+        // 如果R2加载失败，也返回默认空数据而不是抛出错误
+        return {
+          metadata: drawing,
+          elements: [],
+          files: {},
+          appState: {},
+        };
+      }
     } catch (error) {
       console.error("获取画图失败:", error);
       throw error;

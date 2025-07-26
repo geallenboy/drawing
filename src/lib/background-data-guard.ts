@@ -96,7 +96,7 @@ class BackgroundDataGuard {
       console.log(`🔄 强制同步绘图: ${drawingId}`);
       
       const { success, error } = await updateDrawingAction(drawingId, {
-        name: data.metadata.drawingId,
+        // 不传递name字段，避免覆盖原有名称
         data: data.elements,
         files: data.files,
         appState: data.appState,
@@ -218,7 +218,7 @@ class BackgroundDataGuard {
 
     try {
       const { success, error } = await updateDrawingAction(drawingId, {
-        name: data.metadata.drawingId,
+        // 不传递name字段，避免覆盖原有名称
         data: data.elements,
         files: data.files,
         appState: data.appState,

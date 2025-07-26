@@ -38,10 +38,10 @@ import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { updateDrawingAction, getDrawingsByFolderIdAction } from "@/actions/drawing/drawing-action";
 
-import { getFolders } from "@/actions/folder/folder-actions";
 import { format } from "date-fns";
 import { zhCN } from "date-fns/locale";
 import { toast } from "sonner";
+import DialogPop from "./dialog-pop";
 
 type Drawing = {
   id: string;
@@ -454,7 +454,7 @@ type DrawingListProps = {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => router.back()}
+            onClick={() => router.push(`/folders`)}
           >
               <ArrowLeft className="h-4 w-4" />
           </Button>
@@ -481,7 +481,11 @@ type DrawingListProps = {
         {/* 右侧：筛选和排序 */}
         <div className="flex items-center space-x-2">
        
-
+{/* 右侧操作区 */}
+<div className="flex items-center space-x-3">
+          {/* 创建按钮 */}
+          {drawingId && <DialogPop currentFolderId={drawingId} />}
+        </div>
           <Select value={sortBy} onValueChange={(value: SortOption) => setSortBy(value)}>
             <SelectTrigger className="w-28">
               <SelectValue />
@@ -519,7 +523,7 @@ type DrawingListProps = {
           <Palette className="h-12 w-12 text-muted-foreground mb-4" />
           <h3 className="text-lg font-medium mb-2">暂无绘图</h3>
           <p className="text-muted-foreground text-center mb-4">
-            "这个文件夹中还没有绘图文件"
+            &ldquo;这个文件夹中还没有绘图文件&rdquo;
           </p>
         </div>
       ) : (

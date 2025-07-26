@@ -212,12 +212,19 @@ export async function updateDrawingAction(id: string, formData: FormData | Recor
             };
         }
 
+        // 准备元数据更新对象，只包含明确传递的字段
+        const metadataUpdate: any = {};
+        if (data.name !== undefined) metadataUpdate.name = data.name;
+        if (data.desc !== undefined) metadataUpdate.desc = data.desc;
+        if (data.parentFolderId !== undefined) metadataUpdate.parentFolderId = data.parentFolderId;
+
         // 使用新的存储管理器更新画图
-        await DrawingStorageManager.updateDrawing(id, {
-            name: data.name,
-            desc: data.desc,
-            parentFolderId: data.parentFolderId,
-        }, drawingData);
+        // 只有当有元数据更新时才传递元数据，否则传递 undefined
+        await DrawingStorageManager.updateDrawing(
+            id, 
+            Object.keys(metadataUpdate).length > 0 ? metadataUpdate : undefined, 
+            drawingData
+        );
 
         // 获取更新后的画图信息
         const [updatedDrawing] = await db
@@ -678,7 +685,6 @@ export async function getDrawingWithDataAction(id: string): Promise<ActionRespon
 
         // 使用新的存储管理器获取画图数据
         const drawingData = await DrawingStorageManager.getDrawing(id);
-        console.log(drawingData,"drawingData===>>>>");
         if (!drawingData.metadata) {
             return errorResponse("未找到指定画图");
         }

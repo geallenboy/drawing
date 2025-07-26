@@ -1,31 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getCurrentUserWithDbInfo } from '@/features/auth/auth-clerk';
+import { getCurrentAuthUser } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
   try {
     console.log('OAuth 回调处理开始...');
     
     // 获取用户信息并自动同步到数据库
-    const { clerkUser, dbUser } = await getCurrentUserWithDbInfo();
+    const result = await getCurrentAuthUser();
     
-    if (!clerkUser) {
-      console.log('OAuth 回调：未找到 Clerk 用户');
-      return NextResponse.json({ error: '用户未认证' }, { status: 401 });
+    if (!result.success || !result.user) {
+      console.log('OAuth 回调：用户认证失败');
+      return NextResponse.json({ 
+        error: result.error || '用户未认证' 
+      }, { status: 401 });
     }
 
     console.log('OAuth 回调成功:', {
-      clerkId: clerkUser.id,
-      email: clerkUser.email,
-      dbUserExists: !!dbUser
+      userId: result.user.id,
+      email: result.user.email,
+      isNew: result.isNew
     });
 
     return NextResponse.json({
       success: true,
-      user: {
-        clerk: clerkUser,
-        db: dbUser
-      },
-      message: dbUser ? '用户信息已同步' : '用户已认证，数据库同步失败'
+      user: result.user,
+      isNew: result.isNew,
+      message: result.isNew ? '用户信息已创建并同步' : '用户信息已同步'
     });
   } catch (error) {
     console.error('OAuth 回调处理失败:', error);

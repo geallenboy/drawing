@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useImperativeHandle, forwardRef } from "react";
+import React, { useState, useEffect, useImperativeHandle, forwardRef, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -68,7 +68,7 @@ const FolderGrid = forwardRef<FolderGridRef, FolderGridProps>(({ selectedFolderI
   const router = useRouter();
 
   // 加载文件夹数据
-  const loadFolders = async () => {
+  const loadFolders = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -99,11 +99,11 @@ const FolderGrid = forwardRef<FolderGridRef, FolderGridProps>(({ selectedFolderI
     } finally {
       setLoading(false);
     }
-  };
+  }, [parentFolderId]);
 
   useEffect(() => {
     loadFolders();
-  }, [parentFolderId]);
+  }, [loadFolders]);
 
   useImperativeHandle(ref, () => ({
     refreshFolders: loadFolders,
@@ -410,5 +410,6 @@ const FolderGrid = forwardRef<FolderGridRef, FolderGridProps>(({ selectedFolderI
   );
 });
 
+FolderGrid.displayName = 'FolderGrid';
 
 export default FolderGrid;

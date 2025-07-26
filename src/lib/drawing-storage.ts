@@ -128,7 +128,8 @@ export class R2StorageInterface {
       elements: any[];
       files: Record<string, any>;
       appState?: any;
-    }
+    },
+    userId?: string
   ): Promise<string> {
     const drawingContent = createDrawingContent(
       content.elements,
@@ -136,18 +137,23 @@ export class R2StorageInterface {
       content.appState
     );
     
-    return await uploadDrawingData(drawingId, drawingContent);
+    return await uploadDrawingData(drawingId, drawingContent, userId);
   }
 
   /**
    * 从R2获取画图数据
    */
-  static async getDrawing(drawingId: string): Promise<{
+  static async getDrawing(drawingId: string, userId?: string): Promise<{
     elements: any[];
     files: Record<string, any>;
     appState?: any;
   }> {
-    const content = await getDrawingData(`drawings/${drawingId}.json`);
+    // 根据用户ID构建文件路径
+    const fileName = userId 
+      ? `users/${userId}/drawings/${drawingId}.json`
+      : `drawings/${drawingId}.json`;
+    
+    const content = await getDrawingData(fileName);
     
     return {
       elements: content?.elements || [],
@@ -159,7 +165,12 @@ export class R2StorageInterface {
   /**
    * 删除R2中的画图数据
    */
-  static async deleteDrawing(drawingId: string): Promise<void> {
-    await deleteDrawingData(`drawings/${drawingId}.json`);
+  static async deleteDrawing(drawingId: string, userId?: string): Promise<void> {
+    // 根据用户ID构建文件路径
+    const fileName = userId 
+      ? `users/${userId}/drawings/${drawingId}.json`
+      : `drawings/${drawingId}.json`;
+    
+    await deleteDrawingData(fileName);
   }
 }

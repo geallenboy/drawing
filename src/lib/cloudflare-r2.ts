@@ -98,7 +98,7 @@ export async function ensureBucketExists() {
 }
 
 // 上传画图数据到Cloudflare R2
-export async function uploadDrawingData(drawingId: string, data: any): Promise<string> {
+export async function uploadDrawingData(drawingId: string, data: any, userId?: string): Promise<string> {
   try {
     // 检查R2是否可用
     const isAvailable = await isR2Available();
@@ -113,7 +113,10 @@ export async function uploadDrawingData(drawingId: string, data: any): Promise<s
     
     await ensureBucketExists();
     
-    const fileName = `drawings/${drawingId}.json`;
+    // 根据用户ID创建目录结构
+    const fileName = userId 
+      ? `users/${userId}/drawings/${drawingId}.json`
+      : `drawings/${drawingId}.json`;
     const dataString = JSON.stringify(data, null, 2);
     
     const command = new PutObjectCommand({
@@ -123,6 +126,7 @@ export async function uploadDrawingData(drawingId: string, data: any): Promise<s
       ContentType: 'application/json',
       Metadata: {
         'drawing-id': drawingId,
+        'user-id': userId || 'unknown',
         'uploaded-at': new Date().toISOString(),
       },
     });

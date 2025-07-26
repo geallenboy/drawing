@@ -48,7 +48,7 @@ export class DrawingStorageManager {
       const drawingId = drawing.id;
 
       // 2. 上传数据到R2
-      const dataPath = await R2StorageInterface.uploadDrawing(drawingId, content);
+      const dataPath = await R2StorageInterface.uploadDrawing(drawingId, content, metadata.userId);
       
       if (!dataPath) {
         throw new Error("R2存储失败，无法保存画图数据");
@@ -99,7 +99,7 @@ export class DrawingStorageManager {
       }
 
       try {
-        const content = await R2StorageInterface.getDrawing(drawingId);
+        const content = await R2StorageInterface.getDrawing(drawingId, drawing.userId);
         return {
           metadata: drawing,
           elements: content.elements,
@@ -157,14 +157,24 @@ export class DrawingStorageManager {
 
       // 2. 更新R2数据
       if (content) {
-        const dataPath = await R2StorageInterface.uploadDrawing(drawingId, content);
+        // 先获取userId用于R2存储
+        const [currentDrawing] = await db
+          .select({ userId: AIDTDrawingTable.userId })
+          .from(AIDTDrawingTable)
+          .where(eq(AIDTDrawingTable.id, drawingId));
+        
+        if (!currentDrawing) {
+          throw new Error("画图不存在");
+        }
+        
+        const dataPath = await R2StorageInterface.uploadDrawing(drawingId, content, currentDrawing.userId);
         
         if (!dataPath) {
           throw new Error("R2存储失败，无法保存画图数据");
         }
 
-        // 先获取当前版本号
-        const [currentDrawing] = await db
+        // 获取当前版本号（已经在上面获取过currentDrawing了）
+        const [versionInfo] = await db
           .select({ version: AIDTDrawingTable.version })
           .from(AIDTDrawingTable)
           .where(eq(AIDTDrawingTable.id, drawingId));
@@ -177,7 +187,7 @@ export class DrawingStorageManager {
             elementCount: content.elements?.length || 0,
             fileCount: Object.keys(content.files || {}).length,
             lastModified: new Date(),
-            version: (currentDrawing?.version || 0) + 1,
+            version: (versionInfo?.version || 0) + 1,
           })
           .where(eq(AIDTDrawingTable.id, drawingId));
       }
@@ -192,8 +202,16 @@ export class DrawingStorageManager {
    */
   static async deleteDrawing(drawingId: string): Promise<void> {
     try {
+      // 先获取userId用于R2删除
+      const [drawing] = await db
+        .select({ userId: AIDTDrawingTable.userId })
+        .from(AIDTDrawingTable)
+        .where(eq(AIDTDrawingTable.id, drawingId));
+      
       // 1. 删除R2数据
-      await R2StorageInterface.deleteDrawing(drawingId);
+      if (drawing) {
+        await R2StorageInterface.deleteDrawing(drawingId, drawing.userId);
+      }
 
       // 2. 删除数据库记录
       await db

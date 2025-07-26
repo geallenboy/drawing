@@ -1,16 +1,16 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+// import { Inter } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import { ThemeProvider } from "@/components/custom/theme-provider";
 import Provider from "@/app/provider";
 
-const inter = Inter({ 
-  subsets: ["latin"],
+// 使用系统字体而不是Google Fonts，避免构建时网络连接问题
+const inter = {
   variable: "--font-inter",
-  display: 'swap',
-});
+  className: "font-sans",
+};
 
 export const viewport: Viewport = {
   width: 'device-width',

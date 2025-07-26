@@ -3,7 +3,7 @@
 import { db } from "@/drizzle/db";
 import { AIDTDrawing, AIDTDrawingTable } from "@/drizzle/schemas";
 import { eq, sql } from "drizzle-orm";
-import { uploadDrawingData, getDrawingData, deleteDrawingData } from "@/lib/cloudflare-r2";
+import { uploadDrawingData, getDrawingData } from "@/lib/cloudflare-r2";
 
 // 创建新画图
 export async function createDrawing(data: Omit<AIDTDrawing, "id" | "createdAt" | "updatedAt">): Promise<AIDTDrawing> {
@@ -17,23 +17,23 @@ export async function createDrawing(data: Omit<AIDTDrawing, "id" | "createdAt" |
 }
 
 // 创建新画图（集成 Cloudflare R2）
-export async function createDrawingWithMinio(data: Omit<AIDTDrawing, "id" | "createdAt" | "updatedAt">): Promise<AIDTDrawing> {
+export async function createDrawingWithR2(data: Omit<AIDTDrawing, "id" | "createdAt" | "updatedAt">): Promise<AIDTDrawing> {
     // 创建画图，将数据同时存储到数据库和Cloudflare R2
     const [newDrawing] = await db
         .insert(AIDTDrawingTable)
         .values({
             ...data,
             // 确保数据库也有画图数据的副本
-            data: data.data || []
+            dataPath:  data.dataPath || ""
         })
         .returning();
 
     if (newDrawing == null) throw new Error("创建画图失败");
 
     // 如果有画图数据，同时上传到 Cloudflare R2 作为备份
-    if (data.data && Array.isArray(data.data) && data.data.length > 0) {
+    if (data.dataPath && data.dataPath.length > 0) {
         try {
-            await uploadDrawingData(newDrawing.id, data.data);
+            await uploadDrawingData(newDrawing.id, data.dataPath);
             // 更新 filepath 为 Cloudflare R2 路径
             if (!data.filepath) {
                 await db
@@ -63,13 +63,13 @@ export async function getDrawingById(id: string): Promise<AIDTDrawing | null> {
 }
 
 // 获取画图（包含 Cloudflare R2 数据）
-export async function getDrawingWithMinioData(id: string): Promise<AIDTDrawing & { minioData?: any } | null> {
+export async function getDrawingWithR2Data(id: string): Promise<AIDTDrawing & { R2Data?: any } | null> {
     const drawing = await getDrawingById(id);
     if (!drawing) return null;
 
     try {
         // 优先使用数据库中的数据，Cloudflare R2 作为备份
-        if (drawing.data && Array.isArray(drawing.data) && drawing.data.length > 0) {
+        if (drawing.dataPath && drawing.dataPath.length > 0) {
             console.log(`✅ 从数据库获取画图数据: ${id}`);
             return drawing;
         }
@@ -80,8 +80,8 @@ export async function getDrawingWithMinioData(id: string): Promise<AIDTDrawing &
             console.log(`✅ 从 Cloudflare R2 获取画图数据: ${id}`);
             return {
                 ...drawing,
-                data: r2Data,
-                minioData: r2Data // 保持向后兼容的字段名
+                dataPath: r2Data,
+                R2Data: r2Data // 保持向后兼容的字段名
             };
         }
 
@@ -117,13 +117,13 @@ export async function updateDrawing(
 }
 
 // 更新画图（集成 Cloudflare R2）
-export async function updateDrawingWithMinio(
+export async function updateDrawingWithR2(
     id: string,
     data: Partial<Omit<typeof AIDTDrawingTable.$inferInsert, "id" | "createdAt" | "updatedAt">>
 ): Promise<AIDTDrawing> {
     // 准备数据库更新数据
     const updateData = { ...data };
-    const drawingData = updateData.data;
+    const drawingData = updateData.dataPath;
     
     // 将画图数据同时存储到数据库和Cloudflare R2以确保数据一致性
     const [updatedDrawing] = await db

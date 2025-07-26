@@ -31,11 +31,13 @@ import {
   Plus,
   Edit2,
   Check,
-  X
+  X,
+  ArrowLeft
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
-import { getDrawingsByUserIdAction, getDrawingsByFolderIdAction } from "@/actions/drawing/drawing-action";
+import { updateDrawingAction, getDrawingsByFolderIdAction } from "@/actions/drawing/drawing-action";
+
 import { getFolders } from "@/actions/folder/folder-actions";
 import { format } from "date-fns";
 import { zhCN } from "date-fns/locale";
@@ -78,12 +80,12 @@ type SortOption = "latest" | "oldest" | "title" | "popularity";
 type FilterOption = "all" | "mine" | "favorites";
 
 type DrawingListProps = {
-  searchQuery: string;
-  currentFolderId?: string | null;
-  onFolderClick?: (folderId: string) => void;
+
+  drawingId?: string | null;
+
 };
 
-const DrawingList = ({ searchQuery, currentFolderId, onFolderClick }: DrawingListProps) => {
+  const DrawingList = ({ drawingId }: DrawingListProps) => {
   const router = useRouter();
   const { user } = useUser();
   
@@ -114,8 +116,8 @@ const DrawingList = ({ searchQuery, currentFolderId, onFolderClick }: DrawingLis
       setFolders([]);
       
       // 只有在选择了具体文件夹时才加载绘图
-      if (currentFolderId) {
-        const drawingsResult = await getDrawingsByFolderIdAction(currentFolderId);
+      if (drawingId) {
+        const drawingsResult = await getDrawingsByFolderIdAction(drawingId);
         
         if (drawingsResult.error) {
           setError(drawingsResult.error);
@@ -132,7 +134,7 @@ const DrawingList = ({ searchQuery, currentFolderId, onFolderClick }: DrawingLis
     } finally {
       setLoading(false);
     }
-  }, [currentFolderId]);
+  }, [drawingId]);
 
   useEffect(() => {
     loadData();
@@ -143,15 +145,7 @@ const DrawingList = ({ searchQuery, currentFolderId, onFolderClick }: DrawingLis
     let filtered = drawings;
 
     // 搜索过滤
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (drawing) =>
-          drawing.name.toLowerCase().includes(query) ||
-          drawing.desc?.toLowerCase().includes(query) ||
-          drawing.tags?.some(tag => tag.toLowerCase().includes(query))
-      );
-    }
+   
 
     // 类型过滤
     switch (filterBy) {
@@ -180,39 +174,14 @@ const DrawingList = ({ searchQuery, currentFolderId, onFolderClick }: DrawingLis
     });
 
     return filtered;
-  }, [drawings, searchQuery, filterBy, sortBy, favorites, user?.id]);
+  }, [drawings, filterBy, sortBy, favorites, user?.id]);
 
   // 分页逻辑
   const totalPages = Math.ceil(filteredAndSortedDrawings.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedDrawings = filteredAndSortedDrawings.slice(startIndex, startIndex + itemsPerPage);
 
-  // 收藏切换
-  const toggleFavorite = (drawingId: string) => {
-    setFavorites(prev => {
-      const newFavorites = new Set(prev);
-      if (newFavorites.has(drawingId)) {
-        newFavorites.delete(drawingId);
-      } else {
-        newFavorites.add(drawingId);
-      }
-      return newFavorites;
-    });
-  };
 
-  // 分享功能
-  const shareDrawing = (drawing: Drawing) => {
-    if (navigator.share) {
-      navigator.share({
-        title: drawing.name,
-        text: drawing.desc || "查看这个精彩的绘图作品",
-        url: `${window.location.origin}/drawing/${drawing.id}`,
-      });
-    } else {
-      navigator.clipboard.writeText(`${window.location.origin}/drawing/${drawing.id}`);
-      // 这里可以添加一个 toast 提示
-    }
-  };
 
   // 开始编辑名称
   const startEditingName = (drawing: Drawing) => {
@@ -232,7 +201,7 @@ const DrawingList = ({ searchQuery, currentFolderId, onFolderClick }: DrawingLis
 
     setIsUpdating(true);
     try {
-      const { updateDrawingAction } = await import("@/actions/drawing/drawing-action");
+     
       const result = await updateDrawingAction(editingDrawingId, { name: editingName.trim() });
       
       if (result.success) {
@@ -300,8 +269,7 @@ const DrawingList = ({ searchQuery, currentFolderId, onFolderClick }: DrawingLis
 
   // 渲染绘图卡片
   const renderDrawingCard = (drawing: Drawing) => {
-    const isOwner = drawing.userId === user?.id;
-    const isFavorited = favorites.has(drawing.id);
+   
 
     return (
       <Card key={drawing.id} className="group hover:shadow-lg transition-all duration-200 cursor-pointer">
@@ -339,7 +307,7 @@ const DrawingList = ({ searchQuery, currentFolderId, onFolderClick }: DrawingLis
                 </div>
               ) : (
                 <CardTitle 
-                  className="text-sm font-medium truncate cursor-pointer hover:text-primary transition-colors"
+                  className="text-sm font-medium truncate cursor-pointer hover:text-primary transition-colors "
                   onDoubleClick={() => startEditingName(drawing)}
                   title="双击编辑名称"
                 >
@@ -347,22 +315,7 @@ const DrawingList = ({ searchQuery, currentFolderId, onFolderClick }: DrawingLis
                 </CardTitle>
               )}
             </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                
-                {isOwner && (
-                  <DropdownMenuItem onClick={() => router.push(`/drawing/${drawing.id}`)}>
-                    <Palette className="w-4 h-4 mr-2" />
-                    编辑
-                  </DropdownMenuItem>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
+           
           </div>
           
           {drawing.desc && (
@@ -376,7 +329,7 @@ const DrawingList = ({ searchQuery, currentFolderId, onFolderClick }: DrawingLis
           {/* 预览区域 */}
           <div 
             className="h-32 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg mb-3 flex items-center justify-center cursor-pointer border-2 border-transparent hover:border-blue-200 transition-colors"
-            onClick={() => router.push(`/drawing/${drawing.id}`)}
+            onClick={() => router.push(`/drawings/${drawing.id}`)}
           >
             <Palette className="h-8 w-8 text-blue-400" />
           </div>
@@ -405,8 +358,7 @@ const DrawingList = ({ searchQuery, currentFolderId, onFolderClick }: DrawingLis
 
   // 渲染列表项
   const renderDrawingListItem = (drawing: Drawing) => {
-    const isOwner = drawing.userId === user?.id;
-    const isFavorited = favorites.has(drawing.id);
+  
 
     return (
       <Card key={drawing.id} className="group hover:shadow-md transition-all duration-200">
@@ -415,7 +367,7 @@ const DrawingList = ({ searchQuery, currentFolderId, onFolderClick }: DrawingLis
             {/* 预览缩略图 */}
             <div 
               className="w-16 h-16 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg flex items-center justify-center cursor-pointer flex-shrink-0"
-              onClick={() => router.push(`/drawing/${drawing.id}`)}
+              onClick={() => router.push(`/drawings/${drawing.id}`)}
             >
               <Palette className="h-6 w-6 text-blue-400" />
             </div>
@@ -455,7 +407,7 @@ const DrawingList = ({ searchQuery, currentFolderId, onFolderClick }: DrawingLis
                 ) : (
                   <h3 
                     className="font-medium truncate cursor-pointer hover:text-blue-600 flex-1"
-                    onClick={() => router.push(`/drawing/${drawing.id}`)}
+                    onClick={() => router.push(`/drawings/${drawing.id}`)}
                     onDoubleClick={(e) => {
                       e.stopPropagation();
                       startEditingName(drawing);
@@ -485,23 +437,7 @@ const DrawingList = ({ searchQuery, currentFolderId, onFolderClick }: DrawingLis
               </div>
             </div>
 
-            {/* 操作按钮 */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-               
-                {isOwner && (
-                  <DropdownMenuItem onClick={() => router.push(`/drawing/${drawing.id}`)}>
-                    <Palette className="w-4 h-4 mr-2" />
-                    编辑
-                  </DropdownMenuItem>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
+           
           </div>
         </CardContent>
       </Card>
@@ -514,6 +450,14 @@ const DrawingList = ({ searchQuery, currentFolderId, onFolderClick }: DrawingLis
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         {/* 左侧：视图模式切换 */}
         <div className="flex items-center space-x-2">
+          {/* 返回上一级 */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => router.back()}
+          >
+              <ArrowLeft className="h-4 w-4" />
+          </Button>
           <Button
             variant={viewMode === "grid" ? "default" : "outline"}
             size="sm"
@@ -562,7 +506,7 @@ const DrawingList = ({ searchQuery, currentFolderId, onFolderClick }: DrawingLis
       </div>
 
       {/* 绘图列表 */}
-      {!currentFolderId ? (
+      {!drawingId ? (
         <div className="flex flex-col items-center justify-center py-12">
           <Palette className="h-12 w-12 text-muted-foreground mb-4" />
           <h3 className="text-lg font-medium mb-2">请选择一个文件夹</h3>
@@ -575,7 +519,7 @@ const DrawingList = ({ searchQuery, currentFolderId, onFolderClick }: DrawingLis
           <Palette className="h-12 w-12 text-muted-foreground mb-4" />
           <h3 className="text-lg font-medium mb-2">暂无绘图</h3>
           <p className="text-muted-foreground text-center mb-4">
-            {searchQuery ? "没有找到匹配的绘图" : "这个文件夹中还没有绘图文件"}
+            "这个文件夹中还没有绘图文件"
           </p>
         </div>
       ) : (
@@ -606,7 +550,7 @@ const DrawingList = ({ searchQuery, currentFolderId, onFolderClick }: DrawingLis
 
               <div className="flex items-center space-x-1">
                 {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                  let pageNumber;
+                  let pageNumber: number;
                   if (totalPages <= 5) {
                     pageNumber = i + 1;
                   } else if (currentPage <= 3) {

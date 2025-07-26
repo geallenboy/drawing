@@ -6,10 +6,11 @@ export const AIDTDrawingTable = pgTable("drawing", {
     id,
     name: text().notNull(),
     desc: text().notNull().default(""),
-    // 画图内容 - 存储SVG、Canvas数据或其他格式
-    data: jsonb("data").$type<any[]>().notNull().default([]),
-    // 画图文件数据 - 存储图片等文件
-    files: jsonb("files").$type<Record<string, any>>().notNull().default({}),
+    dataPath: text("data_path"), // R2中的数据路径（创建时可能为空） 
+    version: integer("version").notNull().default(1), // 数据版本，用于缓存失效
+    elementCount: integer("element_count").notNull().default(0), // 元素数量，用于展示
+    fileCount: integer("file_count").notNull().default(0), // 文件数量，用于展示
+    lastModified: timestamp("last_modified").notNull().defaultNow(), // 内容最后修改时间
     // 创建者/所有者
     userId: text().notNull(),
     isFavorite: boolean().notNull().default(false),

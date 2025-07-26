@@ -5,11 +5,11 @@ import { AIDTDrawingTable } from "@/drizzle/schemas";
 import { ActionResponse, errorResponse, successResponse } from "@/actions";
 import { eq, sql } from "drizzle-orm";
 import { auth } from "@clerk/nextjs/server";
-import { createDrawingWithMinio, getDrawingWithMinioData, updateDrawingWithMinio } from "@/services/drawing/drawing-service";
-import { deleteDrawingData } from "@/lib/cloudflare-r2";
+import { createDrawingWithR2 } from "@/services/drawing/drawing-service";
+import { DrawingStorageManager } from "@/lib/drawing-storage-server";
 
 
-// 创建新画图
+// 创建新画图（使用新存储方案）
 export async function createDrawingAction(data: any): Promise<ActionResponse> {
     try {
         // 获取当前用户
@@ -28,28 +28,24 @@ export async function createDrawingAction(data: any): Promise<ActionResponse> {
             return errorResponse("画图必须属于某个文件夹");
         }
 
-        console.log(data, "data")
-        // 准备插入数据
-        const drawingData = {
+        // 使用新的存储管理器创建画图
+        const drawingId = await DrawingStorageManager.createDrawing({
             name: data.name as string,
             desc: data.desc as string || "",
             userId: session?.userId,
-            data: data.data || [],
-            parentFolderId: data.parentFolderId as string, // 现在是必需的
-            filepath: data.filepath as string || null,
+            parentFolderId: data.parentFolderId as string,
             isFavorite: false,
-            isDeleted: false,
-            deletedAt: null
-        };
-        console.log(drawingData, "drawingData")
+        }, {
+            elements: data.data || [],
+            files: data.files || {},
+            appState: data.appState || {},
+        });
 
-        // 创建新画图
+        // 获取创建的画图信息
         const [newDrawing] = await db
-            .insert(AIDTDrawingTable)
-            .values(drawingData)
-            .returning();
-
-        if (newDrawing == null) throw new Error("创建画图失败");
+            .select()
+            .from(AIDTDrawingTable)
+            .where(eq(AIDTDrawingTable.id, drawingId));
 
         return successResponse({ drawing: newDrawing });
 
@@ -170,7 +166,7 @@ export async function getDrawingsByFolderIdAction(folderId?: string): Promise<Ac
     }
 }
 
-// 更新画图信息（集成 MinIO）
+// 更新画图信息（使用新存储方案）
 export async function updateDrawingAction(id: string, formData: FormData | Record<string, any>): Promise<ActionResponse> {
     try {
         // 获取当前用户
@@ -202,30 +198,32 @@ export async function updateDrawingAction(id: string, formData: FormData | Recor
             ? Object.fromEntries(formData.entries())
             : formData;
 
-        // 准备更新数据
-        const updateData: Record<string, any> = {};
-
-        // 只更新提供的字段
-        if (data.name !== undefined) updateData.name = data.name;
-        if (data.desc !== undefined) updateData.desc = data.desc;
-        if (data.parentFolderId !== undefined) updateData.parentFolderId = data.parentFolderId;
-        
-        // 如果有画图数据，准备上传到 MinIO
-        if (data.data !== undefined) {
-            updateData.data = typeof data.data === 'string'
-                ? JSON.parse(data.data)
-                : data.data;
+        // 准备画图数据
+        let drawingData = {
+            elements: [],
+            files: {},
+            appState: {},
+        };
+        if (data.data !== undefined || data.files !== undefined) {
+            drawingData = {
+                elements: typeof data.data === 'string' ? JSON.parse(data.data) : (data.data || []),
+                files: typeof data.files === 'string' ? JSON.parse(data.files) : (data.files || {}),
+                appState: data.appState || {},
+            };
         }
 
-        // 如果有文件数据，也要保存
-        if (data.files !== undefined) {
-            updateData.files = typeof data.files === 'string'
-                ? JSON.parse(data.files)
-                : data.files;
-        }
+        // 使用新的存储管理器更新画图
+        await DrawingStorageManager.updateDrawing(id, {
+            name: data.name,
+            desc: data.desc,
+            parentFolderId: data.parentFolderId,
+        }, drawingData);
 
-        // 使用集成 MinIO 的服务更新画图
-        const updatedDrawing = await updateDrawingWithMinio(id, updateData);
+        // 获取更新后的画图信息
+        const [updatedDrawing] = await db
+            .select()
+            .from(AIDTDrawingTable)
+            .where(eq(AIDTDrawingTable.id, id));
 
         return successResponse({ drawing: updatedDrawing });
 
@@ -235,7 +233,7 @@ export async function updateDrawingAction(id: string, formData: FormData | Recor
     }
 }
 
-// 删除画图（包括 MinIO 数据）
+// 删除画图（包括 R2 数据）
 export async function deleteDrawingAction(id: string): Promise<ActionResponse> {
     try {
         // 获取当前用户
@@ -262,12 +260,12 @@ export async function deleteDrawingAction(id: string): Promise<ActionResponse> {
             return errorResponse("无权删除该画图");
         }
 
-        // 先删除 MinIO 中的数据
+        // 使用新的存储管理器删除数据
         try {
-            await deleteDrawingData(`${id}.json`);
-        } catch (minioError) {
-            console.warn("删除 MinIO 中的画图数据失败:", minioError);
-            // MinIO 删除失败不阻止数据库删除，继续执行
+            await DrawingStorageManager.deleteDrawing(id);
+        } catch (storageError) {
+            console.warn("删除R2中的画图数据失败:", storageError);
+            // R2删除失败不阻止数据库删除，继续执行
         }
 
         // 永久删除数据库记录
@@ -622,8 +620,8 @@ export async function getFolderDrawingsAction(folderId: string): Promise<ActionR
     }
 }
 
-// 创建画图（集成 MinIO）
-export async function createDrawingWithMinioAction(data: any): Promise<ActionResponse> {
+// 创建画图（集成 R2）
+export async function createDrawingWithR2Action(data: any): Promise<ActionResponse> {
     try {
         // 获取当前用户
         const session = await auth();
@@ -654,8 +652,8 @@ export async function createDrawingWithMinioAction(data: any): Promise<ActionRes
             deletedAt: null
         };
 
-        // 使用集成 MinIO 的服务创建画图
-        const newDrawing = await createDrawingWithMinio(drawingData);
+        // 
+        const newDrawing = await createDrawingWithR2(drawingData as any);
 
         return successResponse({ drawing: newDrawing });
 
@@ -665,7 +663,7 @@ export async function createDrawingWithMinioAction(data: any): Promise<ActionRes
     }
 }
 
-// 获取画图及其数据（集成 MinIO）
+// 获取画图及其数据（使用新存储方案）
 export async function getDrawingWithDataAction(id: string): Promise<ActionResponse> {
     try {
         // 获取当前用户
@@ -678,22 +676,33 @@ export async function getDrawingWithDataAction(id: string): Promise<ActionRespon
             return errorResponse("画图ID不能为空");
         }
 
-        // 获取画图及 MinIO 数据
-        const drawingWithData = await getDrawingWithMinioData(id);
-
-        if (!drawingWithData) {
+        // 使用新的存储管理器获取画图数据
+        const drawingData = await DrawingStorageManager.getDrawing(id);
+        console.log(drawingData,"drawingData===>>>>");
+        if (!drawingData.metadata) {
             return errorResponse("未找到指定画图");
         }
 
         // 检查权限
-        if (drawingWithData.userId !== session?.userId) {
+        if (drawingData.metadata.userId !== session?.userId) {
             return errorResponse("无权访问该画图");
         }
 
-        // 合并数据库数据和 MinIO 数据
+        // 构造响应数据
         const responseData = {
-            ...drawingWithData,
-            data: drawingWithData.minioData || drawingWithData.data || []
+            id: drawingData.metadata.id,
+            name: drawingData.metadata.name,
+            desc: drawingData.metadata.desc || "",
+            userId: drawingData.metadata.userId,
+            parentFolderId: drawingData.metadata.parentFolderId,
+            isFavorite: drawingData.metadata.isFavorite,
+            isDeleted: drawingData.metadata.isDeleted,
+            deletedAt: drawingData.metadata.deletedAt,
+            createdAt: drawingData.metadata.createdAt,
+            updatedAt: drawingData.metadata.updatedAt,
+            lastModified: drawingData.metadata.lastModified,
+            data: drawingData.elements || [],
+            files: drawingData.files || {},
         };
 
         return successResponse({ drawing: responseData });

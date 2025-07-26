@@ -103,8 +103,7 @@ export async function uploadDrawingData(drawingId: string, data: any): Promise<s
     // 检查R2是否可用
     const isAvailable = await isR2Available();
     if (!isAvailable) {
-      console.warn('Cloudflare R2不可用，跳过文件上传');
-      return ''; // 返回空字符串表示未上传
+      throw new Error('Cloudflare R2不可用，请检查配置');
     }
     
     const client = getR2Client();
@@ -114,14 +113,18 @@ export async function uploadDrawingData(drawingId: string, data: any): Promise<s
     
     await ensureBucketExists();
     
-    const fileName = `${drawingId}.json`;
-    const dataString = JSON.stringify(data);
+    const fileName = `drawings/${drawingId}.json`;
+    const dataString = JSON.stringify(data, null, 2);
     
     const command = new PutObjectCommand({
       Bucket: DRAWING_BUCKET,
       Key: fileName,
       Body: dataString,
       ContentType: 'application/json',
+      Metadata: {
+        'drawing-id': drawingId,
+        'uploaded-at': new Date().toISOString(),
+      },
     });
     
     await client.send(command);
@@ -130,8 +133,7 @@ export async function uploadDrawingData(drawingId: string, data: any): Promise<s
     return fileName;
   } catch (error) {
     console.error('❌ 上传画图数据失败:', error);
-    // 不抛出错误，允许应用继续运行
-    return '';
+    throw error; // 抛出错误，让上层处理
   }
 }
 
@@ -139,7 +141,7 @@ export async function uploadDrawingData(drawingId: string, data: any): Promise<s
 export async function getDrawingData(fileName: string): Promise<any> {
   try {
     if (!fileName) {
-      return null;
+      throw new Error('文件名不能为空');
     }
     
     const client = getR2Client();
@@ -155,7 +157,7 @@ export async function getDrawingData(fileName: string): Promise<any> {
     const response = await client.send(command);
     
     if (!response.Body) {
-      throw new Error('未找到数据');
+      throw new Error(`文件 ${fileName} 不存在或为空`);
     }
     
     // 将流转换为字符串
@@ -169,10 +171,13 @@ export async function getDrawingData(fileName: string): Promise<any> {
     };
     
     const dataString = await streamToString(response.Body);
-    return JSON.parse(dataString);
+    const data = JSON.parse(dataString);
+    
+    console.log(`✅ 画图数据获取成功: ${fileName}`);
+    return data;
   } catch (error) {
-    console.error('❌ 获取画图数据失败:', error);
-    return null; // 返回null而不是抛出错误
+    console.error(`❌ 获取画图数据失败 (${fileName}):`, error);
+    throw error; // 抛出错误，让上层处理
   }
 }
 
@@ -180,13 +185,12 @@ export async function getDrawingData(fileName: string): Promise<any> {
 export async function deleteDrawingData(fileName: string): Promise<void> {
   try {
     if (!fileName) {
-      return;
+      throw new Error('文件名不能为空');
     }
     
     const client = getR2Client();
     if (!client) {
-      console.warn('Cloudflare R2客户端未初始化，跳过文件删除');
-      return;
+      throw new Error('Cloudflare R2客户端未初始化');
     }
     
     const command = new DeleteObjectCommand({
@@ -197,8 +201,8 @@ export async function deleteDrawingData(fileName: string): Promise<void> {
     await client.send(command);
     console.log(`✅ 画图数据删除成功: ${fileName}`);
   } catch (error) {
-    console.error('❌ 删除画图数据失败:', error);
-    // 不抛出错误，允许应用继续运行
+    console.error(`❌ 删除画图数据失败 (${fileName}):`, error);
+    throw error; // 抛出错误，让上层处理
   }
 }
 

@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useRouter } from "next/navigation";
 import { Label } from "@/components/ui/label";
 import { FolderPlus, Loader2, Sparkles, Folder } from "lucide-react";
-import { createDrawingWithMinioAction } from "@/actions/drawing/drawing-action";
+import { createDrawingWithR2Action } from "@/actions/drawing/drawing-action";
 import { getFolders } from "@/actions/folder/folder-actions";
 import { useUserStore } from "@/store/userStore";
 import { toast } from "sonner";
@@ -81,7 +81,7 @@ const DialogPop = ({ currentFolderId }: { currentFolderId?: string | null }) => 
     setLoading(true);
     
     try {
-      const { data, error, success } = await createDrawingWithMinioAction({
+      const { data, error, success } = await createDrawingWithR2Action({
         name: name.trim(),
         desc: description.trim(),
         data: [],

@@ -23,6 +23,7 @@ import { getDrawingsByFolderIdAction } from "@/actions/drawing/drawing-action";
 import { format } from "date-fns";
 import { zhCN } from "date-fns/locale";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 type Folder = {
   id: string;
@@ -35,8 +36,9 @@ type Folder = {
 };
 
 type FolderGridProps = {
-  onFolderSelect: (folderId: string, folderName: string) => void;
+
   selectedFolderId?: string | null;
+  parentFolderId?: string | null; // 新增：父文件夹ID，用于获取子文件夹
   onFoldersChange?: () => void; // 新增：文件夹变更回调
 };
 
@@ -44,7 +46,7 @@ export interface FolderGridRef {
   refreshFolders: () => void;
 }
 
-const FolderGrid = forwardRef<FolderGridRef, FolderGridProps>(({ onFolderSelect, selectedFolderId, onFoldersChange }, ref) => {
+const FolderGrid = forwardRef<FolderGridRef, FolderGridProps>(({ selectedFolderId, parentFolderId, onFoldersChange }, ref) => {
   const { user } = useUser();
   const [folders, setFolders] = useState<Folder[]>([]);
   const [loading, setLoading] = useState(true);
@@ -63,6 +65,7 @@ const FolderGrid = forwardRef<FolderGridRef, FolderGridProps>(({ onFolderSelect,
   const [editName, setEditName] = useState("");
   const [editDesc, setEditDesc] = useState("");
   const [editLoading, setEditLoading] = useState(false);
+  const router = useRouter();
 
   // 加载文件夹数据
   const loadFolders = async () => {
@@ -70,8 +73,8 @@ const FolderGrid = forwardRef<FolderGridRef, FolderGridProps>(({ onFolderSelect,
       setLoading(true);
       setError(null);
       
-      // 获取根文件夹
-      const foldersResult = await getFolders();
+      // 获取文件夹（根据parentFolderId参数）
+      const foldersResult = await getFolders(parentFolderId || undefined);
       if (foldersResult.success) {
         const foldersData = foldersResult.folders || [];
         setFolders(foldersData);
@@ -100,7 +103,7 @@ const FolderGrid = forwardRef<FolderGridRef, FolderGridProps>(({ onFolderSelect,
 
   useEffect(() => {
     loadFolders();
-  }, []);
+  }, [parentFolderId]);
 
   useImperativeHandle(ref, () => ({
     refreshFolders: loadFolders,
@@ -181,10 +184,7 @@ const FolderGrid = forwardRef<FolderGridRef, FolderGridProps>(({ onFolderSelect,
         loadFolders();
         onFoldersChange?.(); // 调用回调
         
-        // 如果删除的是当前选中的文件夹，清空选择
-        if (selectedFolderId === folder.id) {
-          onFolderSelect("", "");
-        }
+      
       } else {
         toast.error(result.error || "删除文件夹失败");
       }
@@ -232,6 +232,10 @@ const FolderGrid = forwardRef<FolderGridRef, FolderGridProps>(({ onFolderSelect,
       </div>
     );
   }
+  
+  const onFolderSelect = (folderId: string) => {
+      router.push(`/folders/${folderId}`);
+  };
 
   return (
     <div className="space-y-4">
@@ -254,11 +258,11 @@ const FolderGrid = forwardRef<FolderGridRef, FolderGridProps>(({ onFolderSelect,
             className={`group hover:shadow-lg transition-all duration-200 cursor-pointer ${
               selectedFolderId === folder.id ? 'ring-2 ring-blue-500 bg-blue-50' : ''
             }`}
-            onClick={() => onFolderSelect(folder.id, folder.name)}
+            onClick={() => onFolderSelect(folder.id)}
           >
             <CardHeader className="pb-2 relative">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-medium truncate flex-1">
+              <div className="flex items-center justify-between gap-2">
+                <CardTitle className="text-sm font-medium truncate flex-1 min-w-0">
                   {folder.name}
                 </CardTitle>
                 <DropdownMenu>
@@ -406,6 +410,5 @@ const FolderGrid = forwardRef<FolderGridRef, FolderGridProps>(({ onFolderSelect,
   );
 });
 
-FolderGrid.displayName = "FolderGrid";
 
 export default FolderGrid;

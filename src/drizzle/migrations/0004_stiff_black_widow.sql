@@ -1,0 +1,1 @@
+ALTER TABLE "drawing" ALTER COLUMN "data_path" DROP NOT NULL;

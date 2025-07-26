@@ -56,7 +56,7 @@ export async function loadDrawingContent(
   drawingId: string
 ): Promise<{ success: boolean; content?: DrawingContent; error?: string }> {
   try {
-    const content = await getDrawingData(`${drawingId}.json`);
+    const content = await getDrawingData(`drawings/${drawingId}.json`);
     if (content) {
       return { success: true, content };
     } else {
@@ -76,7 +76,7 @@ export async function loadDrawingContent(
  */
 export async function deleteDrawingContent(drawingId: string): Promise<void> {
   try {
-    await deleteDrawingData(`${drawingId}.json`);
+    await deleteDrawingData(`drawings/${drawingId}.json`);
   } catch (error) {
     console.error("删除画图内容失败:", error);
     // 不抛出错误，允许删除数据库记录即使R2删除失败
@@ -112,4 +112,54 @@ export function createDrawingContent(
     files,
     appState,
   };
+}
+
+/**
+ * R2存储接口（仅限服务端使用）
+ * 这个接口不包含数据库操作，只负责R2存储
+ */
+export class R2StorageInterface {
+  /**
+   * 上传画图数据到R2
+   */
+  static async uploadDrawing(
+    drawingId: string,
+    content: {
+      elements: any[];
+      files: Record<string, any>;
+      appState?: any;
+    }
+  ): Promise<string> {
+    const drawingContent = createDrawingContent(
+      content.elements,
+      content.files,
+      content.appState
+    );
+    
+    return await uploadDrawingData(drawingId, drawingContent);
+  }
+
+  /**
+   * 从R2获取画图数据
+   */
+  static async getDrawing(drawingId: string): Promise<{
+    elements: any[];
+    files: Record<string, any>;
+    appState?: any;
+  }> {
+    const content = await getDrawingData(`drawings/${drawingId}.json`);
+    
+    return {
+      elements: content?.elements || [],
+      files: content?.files || {},
+      appState: content?.appState,
+    };
+  }
+
+  /**
+   * 删除R2中的画图数据
+   */
+  static async deleteDrawing(drawingId: string): Promise<void> {
+    await deleteDrawingData(`drawings/${drawingId}.json`);
+  }
 }

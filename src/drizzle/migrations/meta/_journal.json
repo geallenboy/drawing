@@ -22,6 +22,20 @@
       "when": 1753359676004,
       "tag": "0002_gray_firebird",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1753420208931,
+      "tag": "0003_cooing_shriek",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1753420645437,
+      "tag": "0004_stiff_black_widow",
+      "breakpoints": true
     }
   ]
 }
